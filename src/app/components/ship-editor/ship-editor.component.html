@@ -1,1 +1,8 @@
-<p>ship-editor works!</p>
+<br />
+<section>
+    <button (click)="addRect()">Add Rect</button>
+    <ko-stage #stage [config]="configStage">
+        <ko-layer #gridLayer></ko-layer>
+        <ko-layer #designLayer></ko-layer>
+    </ko-stage>
+</section>
