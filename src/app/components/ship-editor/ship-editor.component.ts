@@ -7,6 +7,7 @@ import { StageConfig } from 'konva/lib/Stage';
 import { Layer } from 'konva/lib/Layer';
 import { Rect, RectConfig } from 'konva/lib/shapes/Rect';
 import { KonvaEventObject } from 'konva/lib/Node';
+import { Shape } from 'konva/lib/Shape';
 
 @Component({
   selector: 'app-ship-editor',
@@ -61,19 +62,56 @@ export class ShipEditorComponent implements AfterViewInit {
 
   addRect(): void {
     let layer: Layer = (this.designLayer?.getStage() as Layer);
-    let newRect = new Rect({x: 200, y: 200, width: this.gridBlockSize(), height: this.gridBlockSize(), fill: 'red', draggable: true} as RectConfig);
 
-    newRect.on('dragend', this.snapToGrid.bind(this));
+    let randomColor = '#' + Math.floor(Math.random()*16777215).toString(16);
+    let newRect = new Rect({
+      x: this.editorWidth() / 2, 
+      y: this.editorHeight() / 2, 
+      width: this.gridBlockSize(), 
+      height: this.gridBlockSize(), 
+      fill: randomColor, 
+      draggable: true,
+      stroke: '#fffff',
+      strokeWidth: 1,
+    } as RectConfig);
+    
+    let newShadowRect = new Rect({
+      x: newRect.x(), 
+      y: newRect.y(), 
+      width: newRect.width(), 
+      height: newRect.height(), 
+      fill: "#fffff", 
+      draggable: false,
+      opacity: 0.6,
+    } as RectConfig);
+
+    newRect.on('dragstart', (event: KonvaEventObject<DragEvent>) => { this.bringToFront(event.target as Shape) });
+    newRect.on('dragend', (event: KonvaEventObject<DragEvent>) => { this.snapToGrid(event.target as Shape) });
+    newRect.on('dragmove', (_: KonvaEventObject<DragEvent>) => { 
+      newShadowRect.position({
+        x: Math.round(newRect.x() / this.gridBlockSize()) * this.gridBlockSize(),
+        y: Math.round(newRect.y() / this.gridBlockSize()) * this.gridBlockSize()
+      });
+      layer.draw();
+     });
+    layer.add(newShadowRect);
     layer.add(newRect);
     layer.draw();
   }
 
-  snapToGrid(event: KonvaEventObject<DragEvent>): void {
-    let rect = event.target as Rect;
-    let layer: Layer = rect.getLayer() as Layer;
-    rect.position({
-      x: Math.round(rect.x() / this.gridBlockSize()) * this.gridBlockSize(),
-      y: Math.round(rect.y() / this.gridBlockSize()) * this.gridBlockSize()
+  bringToFront(shape: Shape): void {
+    let layer: Layer = shape.getLayer() as Layer;
+    
+    shape.show();
+    shape.moveToTop();
+    layer.draw
+  }
+
+  snapToGrid(shape: Shape): void {
+    let layer: Layer = shape.getLayer() as Layer;
+    shape.position({
+      x: Math.round(shape.x() / this.gridBlockSize()) * this.gridBlockSize(),
+      y: Math.round(shape.y() / this.gridBlockSize()) * this.gridBlockSize()
     });
     layer.draw();
   }
