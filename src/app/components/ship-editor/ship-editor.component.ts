@@ -1,6 +1,7 @@
-import { AfterViewInit, Component, input, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, input, Signal, viewChild, ViewChild } from '@angular/core';
 import {
   CoreShapeComponent,
+  NgKonvaEventObject,
   StageComponent,
 } from 'ng2-konva';
 import { StageConfig } from 'konva/lib/Stage';
@@ -8,6 +9,10 @@ import { Layer } from 'konva/lib/Layer';
 import { Rect, RectConfig } from 'konva/lib/shapes/Rect';
 import { KonvaEventObject } from 'konva/lib/Node';
 import { Shape } from 'konva/lib/Shape';
+import { EditorTool } from '../../models/editor-tool.enum';
+import { Vector2d } from 'konva/lib/types';
+import { ShipElement } from '../../models/ship-element';
+import { ShipElementType } from '../../models/ship-element-type.enum';
 
 @Component({
   selector: 'app-ship-editor',
@@ -17,26 +22,34 @@ import { Shape } from 'konva/lib/Shape';
   styleUrl: './ship-editor.component.scss'
 })
 export class ShipEditorComponent implements AfterViewInit {
-  @ViewChild('stage') stage: StageComponent | undefined;
-  @ViewChild('gridLayer') gridLayer: CoreShapeComponent | undefined;
-  @ViewChild('designLayer') designLayer: CoreShapeComponent | undefined;
-  
+  stage = viewChild.required(StageComponent);
+  gridLayer: Signal<CoreShapeComponent> = viewChild.required('gridLayer');
+  designLayer: Signal<CoreShapeComponent> = viewChild.required('designLayer');
+
   /**
-   * Width of the designer
+   * Width of the designer.
    */
   editorWidth = input.required<number>();
 
   /**
-   * Height of the designer
+   * Height of the designer.
    */
   editorHeight = input.required<number>();
 
   /**
-   * The size of each grid block side in pixels
+   * The size of each grid block side in pixels.
    */
   gridBlockSize = input.required<number>();
 
+  /**
+   * The currently selected tool.
+   */
+  selectedTool = input<EditorTool>(EditorTool.NONE);
+
   public configStage: Partial<StageConfig> = {};
+
+  private shipElements: Array<Array<ShipElement | undefined>> = new Array<Array<ShipElement | undefined>>();
+  private dragging: boolean = false;
 
   ngAfterViewInit(): void {
     
@@ -48,10 +61,15 @@ export class ShipEditorComponent implements AfterViewInit {
 
     // Initialize grid layer
     this.initGrid();
+
+    // Initialize shipElements 2D array
+    for (let x = 0; x < this.editorWidth(); x += this.gridBlockSize()) {
+      this.shipElements.push(new Array<ShipElement | undefined>(this.editorHeight() / this.gridBlockSize()));
+    }
   }
 
   private initGrid(): void {
-    let gridLayer: Layer = (this.gridLayer?.getStage() as Layer);
+    let gridLayer: Layer = (this.gridLayer().getStage() as Layer);
 
     for (let x = 0; x < this.editorWidth(); x += this.gridBlockSize()) {
       for (let y = 0; y < this.editorHeight(); y += this.gridBlockSize()) {
@@ -60,13 +78,60 @@ export class ShipEditorComponent implements AfterViewInit {
     }
   }
 
-  addRect(): void {
-    let layer: Layer = (this.designLayer?.getStage() as Layer);
+  onStageDragStart(): void {
+    this.dragging = true;
+  }
 
-    let randomColor = '#' + Math.floor(Math.random()*16777215).toString(16);
-    let newRect = new Rect({
-      x: this.editorWidth() / 2, 
-      y: this.editorHeight() / 2, 
+  onStageDragEnd(): void {
+    this.dragging = false;
+  }
+
+  onStageDragMove(konvaEvent: NgKonvaEventObject<MouseEvent>): void {
+    if (this.dragging) {
+      switch (this.selectedTool()) {
+
+        case EditorTool.BRUSH:
+          this.addRoomAtPos(this.stage().getStage().getPointerPosition());
+          break;
+        case EditorTool.ERASER:
+          this.removeRoomAtPos(this.stage().getStage().getPointerPosition());
+          break;
+      }
+    }
+  }
+
+  addRoomAtPos(pos: Vector2d | null): void {
+    if (!pos) {
+      return;
+    }
+
+    const xGrid = Math.floor(pos.x / this.gridBlockSize());
+    const yGrid = Math.floor(pos.y / this.gridBlockSize());
+
+    if (this.shipElements[xGrid][yGrid] === undefined) {
+      this.addRect(pos);
+    }
+  }
+
+  removeRoomAtPos(pos: Vector2d | null): void {
+    if (!pos) {
+      return;
+    }
+    
+    this.addRect(pos);
+  }
+
+  addRect(pos: Vector2d | null): void {
+    if (!pos) {
+      return;
+    }
+    const gridXPos = Math.floor(pos.x / this.gridBlockSize()) * this.gridBlockSize();
+    const gridYPos = Math.floor(pos.y / this.gridBlockSize()) * this.gridBlockSize();
+
+    const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16);
+    const newRect = new Rect({
+      x: gridXPos, 
+      y: gridYPos, 
       width: this.gridBlockSize(), 
       height: this.gridBlockSize(), 
       fill: randomColor, 
@@ -75,7 +140,7 @@ export class ShipEditorComponent implements AfterViewInit {
       strokeWidth: 1,
     } as RectConfig);
     
-    let newShadowRect = new Rect({
+    const newShadowRect = new Rect({
       x: newRect.x(), 
       y: newRect.y(), 
       width: newRect.width(), 
@@ -92,27 +157,36 @@ export class ShipEditorComponent implements AfterViewInit {
         x: Math.round(newRect.x() / this.gridBlockSize()) * this.gridBlockSize(),
         y: Math.round(newRect.y() / this.gridBlockSize()) * this.gridBlockSize()
       });
-      layer.draw();
      });
-    layer.add(newShadowRect);
-    layer.add(newRect);
-    layer.draw();
+
+    // Convert x,y coordinates to grid coordinates
+    const xGrid = Math.round(newRect.x() / this.gridBlockSize());
+    const yGrid = Math.round(newRect.y() / this.gridBlockSize());
+    
+    const shipElement = new ShipElement(
+      ShipElementType.HALLWAY,
+      100,
+    );
+
+    this.addShipElement(shipElement, [newRect, newShadowRect], xGrid, yGrid);
   }
 
   bringToFront(shape: Shape): void {
-    let layer: Layer = shape.getLayer() as Layer;
-    
     shape.show();
     shape.moveToTop();
-    layer.draw
   }
 
   snapToGrid(shape: Shape): void {
-    let layer: Layer = shape.getLayer() as Layer;
     shape.position({
       x: Math.round(shape.x() / this.gridBlockSize()) * this.gridBlockSize(),
       y: Math.round(shape.y() / this.gridBlockSize()) * this.gridBlockSize()
     });
-    layer.draw();
+  }
+
+  addShipElement(shipElement: ShipElement, shapes: Shape[], gridX: number, gridY: number): void {
+
+    this.shipElements[gridX][gridY] = shipElement;
+    let layer: Layer = (this.designLayer().getStage() as Layer);
+    shapes.forEach(shape => layer.add(shape));
   }
 }

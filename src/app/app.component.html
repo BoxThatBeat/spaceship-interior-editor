@@ -1,6 +1,11 @@
+<app-editor-toolbar
+(currentToolChanged)="onToolChange($event)">
+</app-editor-toolbar>
+
 <app-ship-editor
-    [editorWidth] = "editorWidth"
-    [editorHeight] = "editorHeight"
-    [gridBlockSize] = "gridBlockSize"
+    [editorWidth]="editorWidth"
+    [editorHeight]="editorHeight"
+    [gridBlockSize]="gridBlockSize"
+    [selectedTool]="currentTool"
 >
 </app-ship-editor>

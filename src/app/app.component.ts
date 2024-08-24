@@ -1,18 +1,28 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { ShipEditorComponent } from "./components/ship-editor/ship-editor.component";
+import { EditorToolbarComponent } from "./components/editor-toolbar/editor-toolbar.component";
+import { EditorTool } from './models/editor-tool.enum';
 
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, ShipEditorComponent],
+  imports: [RouterOutlet, ShipEditorComponent, EditorToolbarComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
+
+  public currentTool: EditorTool = EditorTool.NONE;
   
   public editorWidth: number = 1000;
   public editorHeight: number = 1000;
   public gridBlockSize: number = 100;
+
+  public onToolChange(tool: EditorTool): void {
+    this.currentTool = tool;
+
+    console.log('Current tool:', this.currentTool);
+  }
 }
