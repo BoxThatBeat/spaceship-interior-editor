@@ -1,12 +1,11 @@
-<br />
 <section>
-    <ko-stage
-        [config]="configStage"
-        (mousedown)="onStageDragStart()"
-        (mouseup)="onStageDragEnd()"
-        (mousemove)="onStageDragMove($event)"
-        >
-        <ko-layer #gridLayer></ko-layer>
-        <ko-layer #designLayer></ko-layer>
-    </ko-stage>
+  <ko-stage
+    [config]="configStage"
+    (mousedown)="onStageDragStart()"
+    (mouseup)="onStageDragEnd()"
+    (mousemove)="onStageDragMove()"
+  >
+    <ko-layer #gridLayer></ko-layer>
+    <ko-layer #designLayer></ko-layer>
+  </ko-stage>
 </section>

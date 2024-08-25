@@ -1,8 +1,36 @@
-<div class="toolbar-container">
-    <button (click)="onBrushToggle()">Brush</button>
-    <button (click)="onEraserToggle()">Eraser</button>
-    <button>Zoom In</button>
-    <button>Zoom Out</button>
-    <button>Undo</button>
-    <button>Redo</button>
-</div>
+<mat-toolbar class="toolbar">
+  <mat-button-toggle-group [hideSingleSelectionIndicator]="true" (change)="onSelectedToolChange($event)">
+    <mat-button-toggle [value]="EditorTool.NONE">
+      <span class="material-symbols-sharp" [ngClass]="{ 'btn-toggle-icon-active': currentTool === EditorTool.NONE }">
+        arrow_selector_tool
+      </span>
+    </mat-button-toggle>
+    <mat-button-toggle [value]="EditorTool.BRUSH">
+      <span class="material-symbols-sharp" [ngClass]="{ 'btn-toggle-icon-active': currentTool === EditorTool.BRUSH }">
+        brush
+      </span>
+    </mat-button-toggle>
+    <mat-button-toggle [value]="EditorTool.ERASER">
+      <span class="material-symbols-sharp" [ngClass]="{ 'btn-toggle-icon-active': currentTool === EditorTool.ERASER }">
+        ink_eraser
+      </span>
+    </mat-button-toggle>
+  </mat-button-toggle-group>
+
+  <button mat-icon-button>
+    <mat-icon>undo</mat-icon>
+  </button>
+  <button mat-icon-button>
+    <mat-icon>redo</mat-icon>
+  </button>
+
+  <span class="toolbar-spacer"></span>
+
+  <mat-button-toggle (change)="onGridToggleChange($event.source.checked)">
+    <span class="material-symbols-sharp"> grid_4x4 </span>
+  </mat-button-toggle>
+
+  <button mat-icon-button (click)="onClear()">
+    <span class="material-symbols-sharp btn-toggle-icon-warn"> delete_forever </span>
+  </button>
+</mat-toolbar>

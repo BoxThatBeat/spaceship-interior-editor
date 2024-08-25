@@ -1,11 +1,11 @@
-<app-editor-toolbar
-(currentToolChanged)="onToolChange($event)">
-</app-editor-toolbar>
+<div class="app-shell">
+  <app-editor-toolbar (currentToolChanged)="onToolChange($event)"> </app-editor-toolbar>
 
-<app-ship-editor
+  <app-ship-editor
     [editorWidth]="editorWidth"
     [editorHeight]="editorHeight"
     [gridBlockSize]="gridBlockSize"
     [selectedTool]="currentTool"
->
-</app-ship-editor>
+  >
+  </app-ship-editor>
+</div>
