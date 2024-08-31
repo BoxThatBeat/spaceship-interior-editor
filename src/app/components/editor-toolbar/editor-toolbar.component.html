@@ -1,26 +1,26 @@
 <mat-toolbar class="toolbar">
-  <mat-button-toggle-group [hideSingleSelectionIndicator]="true" (change)="onSelectedToolChange($event)">
-    <mat-button-toggle [value]="EditorTool.NONE">
+  <mat-button-toggle-group [hideSingleSelectionIndicator]="true" [(value)]="currentTool" (change)="onSelectedToolChange()">
+    <mat-button-toggle matTooltip="(ctrl+g)" [value]="EditorTool.NONE">
       <span class="material-symbols-sharp" [ngClass]="{ 'btn-toggle-icon-active': currentTool === EditorTool.NONE }">
         arrow_selector_tool
       </span>
     </mat-button-toggle>
-    <mat-button-toggle [value]="EditorTool.BRUSH">
+    <mat-button-toggle matTooltip="(ctrl+b)" [value]="EditorTool.BRUSH">
       <span class="material-symbols-sharp" [ngClass]="{ 'btn-toggle-icon-active': currentTool === EditorTool.BRUSH }">
         brush
       </span>
     </mat-button-toggle>
-    <mat-button-toggle [value]="EditorTool.ERASER">
+    <mat-button-toggle matTooltip="(ctrl+e)" [value]="EditorTool.ERASER">
       <span class="material-symbols-sharp" [ngClass]="{ 'btn-toggle-icon-active': currentTool === EditorTool.ERASER }">
         ink_eraser
       </span>
     </mat-button-toggle>
   </mat-button-toggle-group>
 
-  <button mat-icon-button>
+  <button mat-icon-button matTooltip="(ctrl+z)">
     <mat-icon>undo</mat-icon>
   </button>
-  <button mat-icon-button>
+  <button mat-icon-button matTooltip="(ctrl+y)">
     <mat-icon>redo</mat-icon>
   </button>
 
