@@ -15,11 +15,16 @@ import { MatIconModule } from '@angular/material/icon';
 export class AppComponent {
   public currentTool: EditorTool = EditorTool.NONE;
 
+  public gridEnabled: boolean = true;
   public editorWidth: number = 1000;
   public editorHeight: number = 1000;
   public gridBlockSize: number = 100;
 
   public onToolChange(tool: EditorTool): void {
     this.currentTool = tool;
+  }
+
+  public onGridToggleChange(value: boolean): void {
+    this.gridEnabled = value;
   }
 }

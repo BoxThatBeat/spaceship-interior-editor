@@ -39,8 +39,8 @@ export class EditorToolbarComponent {
     this.redoEdit.emit();
   }
 
-  public onGridToggleChange(value: boolean): void {
-    this.gridToggleChange.emit(value);
+  public onGridToggleChange(event: MatButtonToggleChange): void {
+    this.gridToggleChange.emit(event.source.checked as boolean);
   }
 
   public onClear(): void {

@@ -38,6 +38,11 @@ export class ShipEditorComponent implements AfterViewInit {
   gridBlockSize = input.required<number>();
 
   /**
+   * Whether the grid is enabled.
+   */
+  gridEnabled = input<boolean>(true);
+
+  /**
    * The currently selected tool.
    */
   selectedTool = input<EditorTool>(EditorTool.NONE);
@@ -59,6 +64,14 @@ export class ShipEditorComponent implements AfterViewInit {
     //     this.stage().getStage().off('dragmove');
     //   }
     // });
+
+    effect(() => {
+      if (this.gridEnabled()) {
+        this.gridLayer().getStage().show();
+      } else {
+        this.gridLayer().getStage().hide();
+      }
+    })
   }
 
   ngAfterViewInit(): void {

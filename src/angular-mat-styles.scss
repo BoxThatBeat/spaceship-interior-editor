@@ -1,0 +1,18 @@
+$hot-bar-height: 4rem;
+
+// Mat Button Toggle Group Override Styling
+.mat-button-toggle-group {
+  height: $hot-bar-height;
+  align-items: center;
+  border: none !important;
+
+  .mat-button-toggle {
+    border: none !important;
+  }
+
+  .mat-button-toggle-button {
+    width: $hot-bar-height;
+    height: $hot-bar-height;
+  }
+}
+

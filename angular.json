@@ -24,7 +24,7 @@
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": ["src/favicon.ico", "src/assets"],
-            "styles": ["src/styles.scss", "node_modules/material-design-icons/iconfont/material-icons.css"],
+            "styles": ["src/styles.scss", "src/angular-mat-styles.scss", "node_modules/material-design-icons/iconfont/material-icons.css"],
             "scripts": []
           },
           "configurations": {

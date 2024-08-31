@@ -26,7 +26,7 @@
 
   <span class="toolbar-spacer"></span>
 
-  <mat-button-toggle (change)="onGridToggleChange($event.source.checked)">
+  <mat-button-toggle [checked]="true" (change)="onGridToggleChange($event)">
     <span class="material-symbols-sharp"> grid_4x4 </span>
   </mat-button-toggle>
 
