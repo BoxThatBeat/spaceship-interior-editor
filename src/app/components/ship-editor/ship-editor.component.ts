@@ -55,13 +55,13 @@ export class ShipEditorComponent implements AfterViewInit {
   constructor() {
     // effect(() => {
     //   if (this.selectedTool() !== EditorTool.NONE) {
-    //     this.stage().getStage().on('dragstart', () => this.onStageDragStart());
-    //     this.stage().getStage().on('dragend', () => this.onStageDragEnd());
-    //     this.stage().getStage().on('dragmove', () => this.onStageDragMove());
+    //     this.stage().getStage().on('mousedown', () => this.onStageDragStart());
+    //     this.stage().getStage().on('mouseup', () => this.onStageDragEnd());
+    //     this.stage().getStage().on('mousemove', () => this.onStageDragMove());
     //   } else {
-    //     this.stage().getStage().off('dragstart');
-    //     this.stage().getStage().off('dragend');
-    //     this.stage().getStage().off('dragmove');
+    //     this.stage().getStage().off('mousedown');
+    //     this.stage().getStage().off('mouseup');
+    //     this.stage().getStage().off('mousemove');
     //   }
     // });
 
@@ -104,6 +104,7 @@ export class ShipEditorComponent implements AfterViewInit {
             height: this.gridBlockSize(),
             stroke: '#D3D3D3',
             strokeWidth: 1,
+            listening: false,
           }),
         );
       }

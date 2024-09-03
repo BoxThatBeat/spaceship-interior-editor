@@ -26,8 +26,13 @@ export class EditorToolbarComponent {
   redoEdit = output<void>();
   clearEditor = output<void>();
 
-  public onSelectedToolChange(): void {
-    this.currentToolChanged.emit(this.currentTool);
+  changeTool(tool: EditorTool) {
+    this.currentTool = tool;
+    this.currentToolChanged.emit(tool);
+  }
+
+  public onSelectedToolChange(toggleChange: MatButtonToggleChange): void {
+    this.changeTool(toggleChange.value as EditorTool);
   }
 
   public onUndo(): void {
@@ -54,19 +59,19 @@ export class EditorToolbarComponent {
   @HostListener('document:keydown.control.g', ['$event'])
   chooseSelectorTool(e: KeyboardEvent) {
     e.preventDefault();
-    this.currentTool = EditorTool.NONE;
+    this.changeTool(EditorTool.NONE);
   }
 
   @HostListener('document:keydown.control.b', ['$event'])
   chooseBrushTool(e: KeyboardEvent) {
     e.preventDefault();
-    this.currentTool = EditorTool.BRUSH;
+    this.changeTool(EditorTool.BRUSH);
   }
 
   @HostListener('document:keydown.control.e', ['$event'])
   chooseEraserTool(e: KeyboardEvent) {
     e.preventDefault();
-    this.currentTool = EditorTool.ERASER;
+    this.changeTool(EditorTool.ERASER);
   }
 
   @HostListener('document:keydown.control.z', ['$event'])

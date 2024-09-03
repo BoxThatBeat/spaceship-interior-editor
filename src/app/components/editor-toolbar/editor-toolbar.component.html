@@ -1,5 +1,5 @@
 <mat-toolbar class="toolbar">
-  <mat-button-toggle-group [hideSingleSelectionIndicator]="true" [(value)]="currentTool" (change)="onSelectedToolChange()">
+  <mat-button-toggle-group [hideSingleSelectionIndicator]="true" [(value)]="currentTool" (change)="onSelectedToolChange($event)">
     <mat-button-toggle matTooltip="(ctrl+g)" [value]="EditorTool.NONE">
       <span class="material-symbols-sharp" [ngClass]="{ 'btn-toggle-icon-active': currentTool === EditorTool.NONE }">
         arrow_selector_tool
