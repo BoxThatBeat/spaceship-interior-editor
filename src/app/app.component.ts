@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, viewChild } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { ShipEditorComponent } from './components/ship-editor/ship-editor.component';
 import { EditorToolbarComponent } from './components/editor-toolbar/editor-toolbar.component';
@@ -13,6 +13,7 @@ import { MatIconModule } from '@angular/material/icon';
   styleUrl: './app.component.scss',
 })
 export class AppComponent {
+  editorComponent = viewChild.required(ShipEditorComponent);
   public currentTool: EditorTool = EditorTool.NONE;
 
   public gridEnabled: boolean = true;
@@ -26,5 +27,9 @@ export class AppComponent {
 
   public onGridToggleChange(value: boolean): void {
     this.gridEnabled = value;
+  }
+
+  public onClearGrid(): void {
+    this.editorComponent().clearEditor();
   }
 }

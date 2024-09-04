@@ -6,6 +6,10 @@
     (mousemove)="onStageDragMove()"
   >
     <ko-layer #gridLayer></ko-layer>
-    <ko-layer #designLayer></ko-layer>
+    <ko-layer #designLayer>
+      @for (rectConfig of rectangleConfigs(); track $index) {
+        <ko-rect [config]="rectConfig"></ko-rect>
+      }
+    </ko-layer>
   </ko-stage>
 </section>

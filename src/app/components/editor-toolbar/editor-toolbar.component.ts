@@ -85,5 +85,4 @@ export class EditorToolbarComponent {
     e.preventDefault();
     this.redoEdit.emit();
   }
-  
 }

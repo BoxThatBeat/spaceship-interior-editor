@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, effect, input, Signal, viewChild, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, effect, input, OnInit, signal, Signal, viewChild, ViewChild, WritableSignal } from '@angular/core';
 import { CoreShapeComponent, NgKonvaEventObject, StageComponent } from 'ng2-konva';
 import { StageConfig } from 'konva/lib/Stage';
 import { Layer } from 'konva/lib/Layer';
@@ -17,10 +17,12 @@ import { ShipElementType } from '../../models/ship-element-type.enum';
   templateUrl: './ship-editor.component.html',
   styleUrl: './ship-editor.component.scss',
 })
-export class ShipEditorComponent implements AfterViewInit {
+export class ShipEditorComponent implements OnInit {
   stage = viewChild.required(StageComponent);
   gridLayer: Signal<CoreShapeComponent> = viewChild.required('gridLayer');
   designLayer: Signal<CoreShapeComponent> = viewChild.required('designLayer');
+
+  rectangleConfigs: WritableSignal<Array<RectConfig>> = signal([]);
 
   /**
    * Width of the designer.
@@ -71,10 +73,10 @@ export class ShipEditorComponent implements AfterViewInit {
       } else {
         this.gridLayer().getStage().hide();
       }
-    })
+    });
   }
 
-  ngAfterViewInit(): void {
+  ngOnInit(): void {
     // Initialize stage
     this.configStage = {
       width: this.editorWidth(),
@@ -96,17 +98,15 @@ export class ShipEditorComponent implements AfterViewInit {
 
     for (let x = 0; x < this.editorWidth(); x += this.gridBlockSize()) {
       for (let y = 0; y < this.editorHeight(); y += this.gridBlockSize()) {
-        gridLayer.add(
-          new Rect({
-            x: x,
-            y: y,
-            width: this.gridBlockSize(),
-            height: this.gridBlockSize(),
-            stroke: '#D3D3D3',
-            strokeWidth: 1,
-            listening: false,
-          }),
-        );
+        this.rectangleConfigs().push({
+          x: x,
+          y: y,
+          width: this.gridBlockSize(),
+          height: this.gridBlockSize(),
+          stroke: '#D3D3D3',
+          strokeWidth: 1,
+          listening: false,
+        } as RectConfig);
       }
     }
   }
@@ -154,6 +154,10 @@ export class ShipEditorComponent implements AfterViewInit {
     if (!pos) {
       return;
     }
+  }
+
+  clearEditor(): void {
+    console.log("clearEditor called");
   }
 
   addRect(pos: Vector2d | null): void {
