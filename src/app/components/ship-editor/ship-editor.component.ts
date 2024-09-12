@@ -1,4 +1,14 @@
-import { Component, effect, input, OnInit, signal, Signal, viewChild, WritableSignal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  effect,
+  input,
+  OnInit,
+  signal,
+  Signal,
+  viewChild,
+  WritableSignal,
+} from '@angular/core';
 import { CoreShapeComponent, NgKonvaEventObject, StageComponent } from 'ng2-konva';
 import { StageConfig } from 'konva/lib/Stage';
 import { Layer } from 'konva/lib/Layer';
@@ -16,6 +26,7 @@ import { ShipElementType } from '../../models/ship-element-type.enum';
   imports: [StageComponent, CoreShapeComponent],
   templateUrl: './ship-editor.component.html',
   styleUrl: './ship-editor.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ShipEditorComponent implements OnInit {
   stage = viewChild.required(StageComponent);
@@ -43,7 +54,7 @@ export class ShipEditorComponent implements OnInit {
   /**
    * Whether the grid is enabled.
    */
-  gridEnabled = input<boolean>(true);
+  gridEnabled = input<boolean>();
 
   /**
    * The currently selected tool.
@@ -53,34 +64,10 @@ export class ShipEditorComponent implements OnInit {
   public configStage: Partial<StageConfig> = {};
 
   private dragging: boolean = false;
+  private selectedShape: Shape | undefined = undefined;
+  private selectedElementStartPos: Vector2d | undefined = undefined;
 
   constructor() {
-    // effect(() => {
-    //   if (this.selectedTool() !== EditorTool.NONE) {
-    //     this.removeStageListeners();
-    //     this.stage()
-    //       .getStage()
-    //       .on('mousedown', (event) => this.onToolStageDragStart(event));
-    //     this.stage()
-    //       .getStage()
-    //       .on('mouseup', (event) => this.onToolStageDragEnd(event));
-    //     this.stage()
-    //       .getStage()
-    //       .on('mousemove', (event) => this.onToolStageDragMove(event));
-    //   } else {
-    //     this.removeStageListeners();
-    //     this.stage()
-    //       .getStage()
-    //       .on('mousedown', (event) => this.onToolStageDragStart(event));
-    //     this.stage()
-    //       .getStage()
-    //       .on('mouseup', (event) => this.onToolStageDragEnd(event));
-    //     this.stage()
-    //       .getStage()
-    //       .on('mousemove', (event) => this.onToolStageDragMove(event));
-    //   }
-    // });
-
     effect(() => {
       if (this.gridEnabled()) {
         this.gridLayer().getStage().show();
@@ -106,9 +93,6 @@ export class ShipEditorComponent implements OnInit {
 
     this.initGrid();
     this.initShipElements();
-
-    //Test
-    this.addRoomAtPos({ x: 100, y: 100 });
   }
 
   /**
@@ -145,45 +129,6 @@ export class ShipEditorComponent implements OnInit {
     }
   }
 
-  onRectDragStart(ngEvent: NgKonvaEventObject<MouseEvent>): void {
-    this.dragging = true;
-
-    if (!ngEvent.event) {
-      return;
-    }
-
-    if (this.selectedTool() === EditorTool.NONE) {
-      this.bringToFront(ngEvent.event.target as Shape);
-      //TODO: set the rect as the selected rectangle and only modify it so that others are not selected. Also add a shadow rect to show where the rect will be placed
-    }
-  }
-
-  onRectDragEnd(ngEvent: NgKonvaEventObject<MouseEvent>): void {
-    this.dragging = false;
-
-    if (!ngEvent.event) {
-      return;
-    }
-
-    if (this.selectedTool() === EditorTool.NONE) {
-      this.snapToGrid(ngEvent.event.target as Shape);
-    }
-  }
-
-  onRectDragMove(ngEvent: NgKonvaEventObject<MouseEvent>): void {
-    if (!ngEvent.event) {
-      return;
-    }
-
-    if (this.selectedTool() === EditorTool.NONE && this.dragging) {
-      const shape = ngEvent.event.target as Shape;
-      shape.position({
-        x: shape.x() + ngEvent.event.evt.movementX,
-        y: shape.y() + ngEvent.event.evt.movementY,
-      });
-    }
-  }
-
   onToolStageDragStart(ngEvent: NgKonvaEventObject<MouseEvent>): void {
     this.dragging = true;
 
@@ -191,16 +136,29 @@ export class ShipEditorComponent implements OnInit {
       return;
     }
 
-    if (ngEvent.event.target === this.stage().getStage()) {
-      this.useTool();
-    }
-  }
+    switch (this.selectedTool()) {
+      case EditorTool.BRUSH:
+        this.addRoomAtPos(this.stage().getStage().getPointerPosition());
+        break;
+      case EditorTool.ERASER:
+        this.removeRoomAtPos(this.stage().getStage().getPointerPosition());
+        break;
+      case EditorTool.NONE:
+        if (ngEvent.event.target !== this.stage().getStage()) {
+          const shape = ngEvent.event.target as Shape;
+          this.bringToFront(shape);
+          this.selectedShape = shape;
 
-  onToolStageDragEnd(ngEvent: NgKonvaEventObject<MouseEvent>): void {
-    this.dragging = false;
+          const pointerPos = this.stage().getStage().getPointerPosition();
+          if (!pointerPos) {
+            break;
+          }
 
-    if (!ngEvent.event) {
-      return;
+          const xGrid = Math.floor(pointerPos.x / this.gridBlockSize());
+          const yGrid = Math.floor(pointerPos.y / this.gridBlockSize());
+          this.selectedElementStartPos = { x: xGrid, y: yGrid } as Vector2d;
+        }
+        break;
     }
   }
 
@@ -210,21 +168,75 @@ export class ShipEditorComponent implements OnInit {
     }
 
     if (this.dragging) {
-      if (ngEvent.event.target === this.stage().getStage()) {
-        this.useTool();
+      switch (this.selectedTool()) {
+        case EditorTool.BRUSH:
+          this.addRoomAtPos(this.stage().getStage().getPointerPosition());
+          break;
+        case EditorTool.ERASER:
+          this.removeRoomAtPos(this.stage().getStage().getPointerPosition());
+          break;
+        case EditorTool.NONE:
+          if (this.selectedShape) {
+            this.selectedShape.position({
+              x: this.selectedShape.x() + ngEvent.event.evt.movementX,
+              y: this.selectedShape.y() + ngEvent.event.evt.movementY,
+            });
+          } else {
+            // if (ngEvent.event.target !== this.stage().getStage()) {
+            //   const shape = ngEvent.event.target as Shape;
+            //   shape.position({
+            //     x: shape.x() + ngEvent.event.evt.movementX,
+            //     y: shape.y() + ngEvent.event.evt.movementY,
+            //   });
+            // }
+          }
+          break;
       }
     }
   }
 
-  useTool(): void {
-    switch (this.selectedTool()) {
-      case EditorTool.BRUSH:
-        this.addRoomAtPos(this.stage().getStage().getPointerPosition());
-        break;
-      case EditorTool.ERASER:
-        this.removeRoomAtPos(this.stage().getStage().getPointerPosition());
-        break;
+  onToolStageDragEnd(ngEvent: NgKonvaEventObject<MouseEvent>): void {
+    this.dragging = false;
+
+    if (!ngEvent.event) {
+      return;
     }
+
+    if (this.selectedTool() === EditorTool.NONE) {
+      if (this.selectedShape) {
+        // Update position of ship element in 2D array
+        if (this.selectedElementStartPos) {
+          const xGrid = Math.floor(this.selectedShape.x() / this.gridBlockSize());
+          const yGrid = Math.floor(this.selectedShape.y() / this.gridBlockSize());
+          this.shipElements.update((shipElements) => {
+            if (this.selectedElementStartPos) {
+              const shipElement = shipElements[this.selectedElementStartPos.x][this.selectedElementStartPos.y];
+              shipElements[this.selectedElementStartPos.x][this.selectedElementStartPos.y] = undefined;
+              shipElements[xGrid][yGrid] = shipElement;
+              console.log('moved element from ', this.selectedElementStartPos, ' to ', { x: xGrid, y: yGrid });
+            }
+            return shipElements;
+          });
+          console.log(this.shipElements());
+        }
+
+        this.snapToGrid(this.selectedShape);
+      }
+
+      this.selectedShape = undefined;
+      this.selectedElementStartPos = undefined;
+
+      // TODO: save original position of element and if placement is invalid, revert to original position and show error banner for a short period of time
+    }
+  }
+
+  getShipElementAtMousePos(mousePos: Vector2d | null): ShipElement | undefined {
+    if (!mousePos) {
+      return undefined;
+    }
+    const xGrid = Math.floor(mousePos.x / this.gridBlockSize());
+    const yGrid = Math.floor(mousePos.y / this.gridBlockSize());
+    return this.shipElements()[xGrid][yGrid];
   }
 
   addRoomAtPos(pos: Vector2d | null): void {
@@ -284,34 +296,8 @@ export class ShipEditorComponent implements OnInit {
       strokeWidth: 1,
     } as RectConfig;
 
-    // const newShadowRectConfig = {
-    //   name: 'rect',
-    //   x: newRectConfig.x,
-    //   y: newRectConfig.y,
-    //   width: newRectConfig.width,
-    //   height: newRectConfig.height,
-    //   fill: '#fffff',
-    //   opacity: 0.6,
-    // } as RectConfig;
-
-    // newRect.on('dragstart', (event: KonvaEventObject<DragEvent>) => {
-    //   this.bringToFront(event.target as Shape);
-    // });
-    // newRect.on('dragend', (event: KonvaEventObject<DragEvent>) => {
-    //   this.snapToGrid(event.target as Shape);
-    // });
-    // newRect.on('dragmove', (_: KonvaEventObject<DragEvent>) => {
-    //   newShadowRect.position({
-    //     x: Math.round(newRect.x() / this.gridBlockSize()) * this.gridBlockSize(),
-    //     y: Math.round(newRect.y() / this.gridBlockSize()) * this.gridBlockSize(),
-    //   });
-    // });
-
     this.shipElements.update((shipElements) => {
-      shipElements[xGrid][yGrid] = new ShipElement(ShipElementType.HALLWAY, 100, undefined, [
-        newRectConfig,
-        // newShadowRectConfig,
-      ]);
+      shipElements[xGrid][yGrid] = new ShipElement(ShipElementType.HALLWAY, 100, undefined, [newRectConfig]);
       return shipElements;
     });
   }

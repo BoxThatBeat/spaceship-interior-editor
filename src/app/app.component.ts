@@ -16,7 +16,7 @@ export class AppComponent {
   editorComponent = viewChild.required(ShipEditorComponent);
   public currentTool: EditorTool = EditorTool.NONE;
 
-  public gridEnabled: boolean = true;
+  public gridEnabled: boolean = false;
   public editorWidth: number = 1000;
   public editorHeight: number = 1000;
   public gridBlockSize: number = 100;

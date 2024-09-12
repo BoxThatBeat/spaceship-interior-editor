@@ -1,5 +1,9 @@
 <mat-toolbar class="toolbar">
-  <mat-button-toggle-group [hideSingleSelectionIndicator]="true" [(value)]="currentTool" (change)="onSelectedToolChange($event)">
+  <mat-button-toggle-group
+    [hideSingleSelectionIndicator]="true"
+    [(value)]="currentTool"
+    (change)="onSelectedToolChange($event)"
+  >
     <mat-button-toggle matTooltip="(ctrl+g)" [value]="EditorTool.NONE">
       <span class="material-symbols-sharp" [ngClass]="{ 'btn-toggle-icon-active': currentTool === EditorTool.NONE }">
         arrow_selector_tool
@@ -26,7 +30,7 @@
 
   <span class="toolbar-spacer"></span>
 
-  <mat-button-toggle [checked]="true" (change)="onGridToggleChange($event)">
+  <mat-button-toggle checked="false" (change)="onGridToggleChange($event)">
     <span class="material-symbols-sharp"> grid_4x4 </span>
   </mat-button-toggle>
 

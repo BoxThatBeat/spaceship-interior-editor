@@ -17,13 +17,7 @@
           @if (shipElement && shipElement.shapeConfigs) {
             @for (shapeConfig of shipElement.shapeConfigs; track $index) {
               @if (shapeConfig.name === 'rect') {
-                <ko-rect
-                  [config]="shapeConfig"
-                  (mousedown)="onRectDragStart($event)"
-                  (mouseup)="onRectDragEnd($event)"
-                  (mousemove)="onRectDragMove($event)"
-                ></ko-rect>
-                <!-- TODO: See if I should add mousedown event to above rect obj -->
+                <ko-rect [config]="shapeConfig"></ko-rect>
               }
             }
           }
