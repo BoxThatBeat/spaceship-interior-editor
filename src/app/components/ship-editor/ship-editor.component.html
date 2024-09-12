@@ -1,14 +1,33 @@
 <section>
   <ko-stage
     [config]="configStage"
-    (mousedown)="onStageDragStart()"
-    (mouseup)="onStageDragEnd()"
-    (mousemove)="onStageDragMove()"
+    (mousedown)="onToolStageDragStart($event)"
+    (mouseup)="onToolStageDragEnd($event)"
+    (mousemove)="onToolStageDragMove($event)"
   >
-    <ko-layer #gridLayer></ko-layer>
-    <ko-layer #designLayer>
-      @for (rectConfig of rectangleConfigs(); track $index) {
+    <ko-layer #gridLayer>
+      @for (rectConfig of gridRectConfigs(); track $index) {
         <ko-rect [config]="rectConfig"></ko-rect>
+      }
+    </ko-layer>
+    <ko-layer #designLayer>
+      @for (shipElementRow of shipElements(); track $index) {
+        @for (shipElement of shipElementRow; track $index) {
+          <!-- Draw a ship element either with Konva shapes or an image -->
+          @if (shipElement && shipElement.shapeConfigs) {
+            @for (shapeConfig of shipElement.shapeConfigs; track $index) {
+              @if (shapeConfig.name === 'rect') {
+                <ko-rect
+                  [config]="shapeConfig"
+                  (mousedown)="onRectDragStart($event)"
+                  (mouseup)="onRectDragEnd($event)"
+                  (mousemove)="onRectDragMove($event)"
+                ></ko-rect>
+                <!-- TODO: See if I should add mousedown event to above rect obj -->
+              }
+            }
+          }
+        }
       }
     </ko-layer>
   </ko-stage>
