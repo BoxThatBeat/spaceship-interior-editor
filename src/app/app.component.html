@@ -1,17 +1,22 @@
 <div class="app-shell">
-  <app-editor-toolbar 
-    (currentToolChanged)="onToolChange($event)"
-    (gridToggleChange)="onGridToggleChange($event)"
-    (clearEditor)="onClearGrid()"
-    >
-  </app-editor-toolbar>
+  <div class="app-content">
+    <app-side-bar [shipElements]="shipElements"></app-side-bar>
+    <div>
+      <app-editor-toolbar
+        (currentToolChanged)="onToolChange($event)"
+        (gridToggleChange)="onGridToggleChange($event)"
+        (clearEditor)="onClearGrid()"
+      >
+      </app-editor-toolbar>
 
-  <app-ship-editor
-    [editorWidth]="editorWidth"
-    [editorHeight]="editorHeight"
-    [gridBlockSize]="gridBlockSize"
-    [selectedTool]="currentTool"
-    [gridEnabled]="gridEnabled"
-  >
-  </app-ship-editor>
+      <app-ship-editor
+        [editorWidth]="editorWidth"
+        [editorHeight]="editorHeight"
+        [gridBlockSize]="gridBlockSize"
+        [selectedTool]="currentTool"
+        [gridEnabled]="gridEnabled"
+      >
+      </app-ship-editor>
+    </div>
+  </div>
 </div>

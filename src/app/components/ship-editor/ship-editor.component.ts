@@ -297,7 +297,7 @@ export class ShipEditorComponent implements OnInit {
     } as RectConfig;
 
     this.shipElements.update((shipElements) => {
-      shipElements[xGrid][yGrid] = new ShipElement(ShipElementType.HALLWAY, 100, undefined, [newRectConfig]);
+      shipElements[xGrid][yGrid] = new ShipElement('Hull', 'Other', 100, [], undefined, [newRectConfig]);
       return shipElements;
     });
   }

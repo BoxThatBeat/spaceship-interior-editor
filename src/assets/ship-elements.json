@@ -1,0 +1,98 @@
+[
+  {
+    "name": "Small Thruster",
+    "type": "Engines",
+    "notes": ["test1", "test2", "test3"],
+    "tacticalValue": 50
+  },
+  {
+    "name": "Large Thruster",
+    "type": "Engines",
+    "notes": ["test1", "test2", "test3"],
+    "tacticalValue": 150
+  },
+  {
+    "name": "Engine v5",
+    "type": "Engines",
+    "notes": [],
+    "tacticalValue": 100
+  },
+  {
+    "name": "Engine v10",
+    "type": "Engines",
+    "notes": [],
+    "tacticalValue": 200
+  },
+  {
+    "name": "Engine v15",
+    "type": "Engines",
+    "notes": [],
+    "tacticalValue": 500
+  },
+  {
+    "name": "Large Engine",
+    "type": "Engines",
+    "notes": [],
+    "tacticalValue": 500
+  },
+  {
+    "name": "Shield Generator",
+    "type": "Shields",
+    "notes": [],
+    "tacticalValue": 250
+  },
+  {
+    "name": "Large Shield Generator",
+    "type": "Shields",
+    "notes": [],
+    "tacticalValue": 400
+  },
+  {
+    "name": "Shield Capacitor",
+    "type": "Shields",
+    "notes": [],
+    "tacticalValue": 100
+  },
+  {
+    "name": "Breach Pod Launcher",
+    "type": "Weapons",
+    "notes": [],
+    "tacticalValue": 100
+  },
+  {
+    "name": "Scatter Missile Launcher 2x",
+    "type": "Weapons",
+    "notes": [],
+    "tacticalValue": 200
+  },
+  {
+    "name": "Scatter Missile Launcher 4x",
+    "type": "Weapons",
+    "notes": [],
+    "tacticalValue": 350
+  },
+  {
+    "name": "Laser Gun",
+    "type": "Weapons",
+    "notes": [],
+    "tacticalValue": 150
+  },
+  {
+    "name": "Gauss Rifle",
+    "type": "Weapons",
+    "notes": [],
+    "tacticalValue": 200
+  },
+  {
+    "name": "Guided Missle Launcher (2)",
+    "type": "Weapons",
+    "notes": ["Only has 2 missiles for the whole match"],
+    "tacticalValue": 300
+  },
+  {
+    "name": "Guided Missle Launcher (4)",
+    "type": "Weapons",
+    "notes": ["Only has 4 missiles for the whole match"],
+    "tacticalValue": 450
+  }
+]
