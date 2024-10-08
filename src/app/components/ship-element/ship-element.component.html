@@ -1,1 +1,19 @@
-<p>ship-element works!</p>
+<div class="ship-element-container">
+  <div class="description-container">
+    <p>Notes:</p>
+    <ul>
+      @for (shipElementNote of shipElement().notes; track $index) {
+        <li>{{ shipElementNote }}</li>
+      }
+    </ul>
+  </div>
+  <div class="image-container">
+    <img
+      #shipElementImage
+      src="{{ shipElement().image }}"
+      alt="{{ shipElement().name }}"
+      draggable="true"
+      (dragstart)="onImageDrag($event)"
+    />
+  </div>
+</div>

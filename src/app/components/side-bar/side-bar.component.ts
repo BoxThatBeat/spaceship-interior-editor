@@ -1,16 +1,23 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { ShipElement } from '../../models/ship-element';
+import { ShipElementComponent } from '../ship-element/ship-element.component';
 
 @Component({
   selector: 'app-side-bar',
   standalone: true,
-  imports: [MatTabsModule, MatExpansionModule],
+  imports: [MatTabsModule, MatExpansionModule, ShipElementComponent],
   templateUrl: './side-bar.component.html',
   styleUrl: './side-bar.component.scss',
 })
 export class SideBarComponent {
+  heldImageSrcChanged = output<string>();
+
+  public onHeldImageSrcChange(heldImageSrc: string): void {
+    this.heldImageSrcChanged.emit(heldImageSrc);
+  }
+
   /**
    * Ship elements to display loaded from json config
    */

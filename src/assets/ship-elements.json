@@ -8,7 +8,11 @@
   {
     "name": "Large Thruster",
     "type": "Engines",
-    "notes": ["test1", "test2", "test3"],
+    "notes": [
+      "Can only be placed on the outer edge of ship",
+      "Takes up 2x2 on grid",
+      "At least 1 required on capital ships"
+    ],
     "tacticalValue": 150
   },
   {
@@ -74,7 +78,8 @@
   {
     "name": "Laser Gun",
     "type": "Weapons",
-    "notes": [],
+    "image": "/assets/ship-element-images/laser.png",
+    "notes": ["Takes up 2x1 on grid", "Fires lasers!"],
     "tacticalValue": 150
   },
   {

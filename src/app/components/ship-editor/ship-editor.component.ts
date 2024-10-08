@@ -19,6 +19,7 @@ import { EditorTool } from '../../models/editor-tool.enum';
 import { Vector2d } from 'konva/lib/types';
 import { ShipElement } from '../../models/ship-element';
 import { ShipElementType } from '../../models/ship-element-type.enum';
+import { ImageConfig } from 'konva/lib/shapes/Image';
 
 @Component({
   selector: 'app-ship-editor',
@@ -35,6 +36,11 @@ export class ShipEditorComponent implements OnInit {
 
   gridRectConfigs: WritableSignal<Array<RectConfig>> = signal([]);
   shipElements: WritableSignal<Array<Array<ShipElement | undefined>>> = signal([]);
+
+  /**
+   * The image source string of the image currently being held by the user (with a mouse drag).
+   */
+  currentlyHeldImageSrc = input.required<string>();
 
   /**
    * Width of the designer.
@@ -230,6 +236,48 @@ export class ShipEditorComponent implements OnInit {
     }
   }
 
+  onContainerDragOver(event: any) {
+    event.preventDefault();
+  }
+
+  onImageDropped(event: any) {
+    event.preventDefault();
+
+    // register event position
+    this.stage().getStage().setPointersPositions(event);
+
+    let pos = this.stage().getStage().getPointerPosition();
+
+    if (pos === null) {
+      return;
+    }
+
+    const gridXPos = Math.floor(pos.x / this.gridBlockSize()) * this.gridBlockSize();
+    const gridYPos = Math.floor(pos.y / this.gridBlockSize()) * this.gridBlockSize();
+
+    // Convert x,y coordinates to grid coordinates
+    const xGrid = Math.round(gridXPos / this.gridBlockSize());
+    const yGrid = Math.round(gridYPos / this.gridBlockSize());
+
+    const img = document.createElement('img');
+    img.src = this.currentlyHeldImageSrc();
+    let image: ImageConfig = {
+      name: 'image',
+      image: img,
+      x: pos.x,
+      y: pos.y,
+      //offsetX:
+      //offsetY:
+    };
+
+    console.log(image);
+
+    this.shipElements.update((shipElements) => {
+      shipElements[xGrid][yGrid] = new ShipElement('Hull', 'Other', 100, [], undefined, [image]); //TODO: propogate the ShipElement held instead of just the image src
+      return shipElements;
+    });
+  }
+
   getShipElementAtMousePos(mousePos: Vector2d | null): ShipElement | undefined {
     if (!mousePos) {
       return undefined;
@@ -284,14 +332,13 @@ export class ShipEditorComponent implements OnInit {
     const xGrid = Math.round(gridXPos / this.gridBlockSize());
     const yGrid = Math.round(gridYPos / this.gridBlockSize());
 
-    const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16);
     const newRectConfig = {
       name: 'rect',
       x: gridXPos,
       y: gridYPos,
       width: this.gridBlockSize(),
       height: this.gridBlockSize(),
-      fill: randomColor,
+      fill: '#808080',
       stroke: '#fffff',
       strokeWidth: 1,
     } as RectConfig;

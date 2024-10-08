@@ -1,6 +1,6 @@
 <div class="app-shell">
   <div class="app-content">
-    <app-side-bar [shipElements]="shipElements"></app-side-bar>
+    <app-side-bar [shipElements]="shipElements" (heldImageSrcChanged)="onHeldImageSrcChange($event)"></app-side-bar>
     <div>
       <app-editor-toolbar
         (currentToolChanged)="onToolChange($event)"
@@ -15,6 +15,7 @@
         [gridBlockSize]="gridBlockSize"
         [selectedTool]="currentTool"
         [gridEnabled]="gridEnabled"
+        [currentlyHeldImageSrc]="currentlyHeldImageSrc"
       >
       </app-ship-editor>
     </div>

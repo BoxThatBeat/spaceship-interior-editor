@@ -7,7 +7,7 @@ export class ShipElement {
     public type: string,
     public tacticalValue: number,
     public notes?: string[],
-    public imageSrc?: string,
+    public image?: string,
     public shapeConfigs?: ShapeConfig[], //TODO: move ShipElement into an implementation of Shape and then remove this
   ) {}
 }

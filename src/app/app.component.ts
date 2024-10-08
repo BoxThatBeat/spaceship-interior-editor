@@ -24,7 +24,9 @@ import shipElementsJson from '../assets/ship-elements.json';
 })
 export class AppComponent {
   editorComponent = viewChild.required(ShipEditorComponent);
+
   public currentTool: EditorTool = EditorTool.NONE;
+  public currentlyHeldImageSrc: string = '';
 
   public gridEnabled: boolean = false;
   public editorWidth: number = 1000;
@@ -42,5 +44,9 @@ export class AppComponent {
 
   public onClearGrid(): void {
     this.editorComponent().clearEditor();
+  }
+
+  public onHeldImageSrcChange(heldImageSrc: string): void {
+    this.currentlyHeldImageSrc = heldImageSrc;
   }
 }

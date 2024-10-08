@@ -1,28 +1,33 @@
 <section>
-  <ko-stage
-    [config]="configStage"
-    (mousedown)="onToolStageDragStart($event)"
-    (mouseup)="onToolStageDragEnd($event)"
-    (mousemove)="onToolStageDragMove($event)"
-  >
-    <ko-layer #gridLayer>
-      @for (rectConfig of gridRectConfigs(); track $index) {
-        <ko-rect [config]="rectConfig"></ko-rect>
-      }
-    </ko-layer>
-    <ko-layer #designLayer>
-      @for (shipElementRow of shipElements(); track $index) {
-        @for (shipElement of shipElementRow; track $index) {
-          <!-- Draw a ship element either with Konva shapes or an image -->
-          @if (shipElement && shipElement.shapeConfigs) {
-            @for (shapeConfig of shipElement.shapeConfigs; track $index) {
-              @if (shapeConfig.name === 'rect') {
-                <ko-rect [config]="shapeConfig"></ko-rect>
+  <div (drop)="onImageDropped($event)" (dragover)="onContainerDragOver($event)">
+    <ko-stage
+      [config]="configStage"
+      (mousedown)="onToolStageDragStart($event)"
+      (mouseup)="onToolStageDragEnd($event)"
+      (mousemove)="onToolStageDragMove($event)"
+    >
+      <ko-layer #gridLayer>
+        @for (rectConfig of gridRectConfigs(); track $index) {
+          <ko-rect [config]="rectConfig"></ko-rect>
+        }
+      </ko-layer>
+      <ko-layer #designLayer>
+        @for (shipElementRow of shipElements(); track $index) {
+          @for (shipElement of shipElementRow; track $index) {
+            <!-- Draw a ship element either with Konva shapes or an image -->
+            @if (shipElement && shipElement.shapeConfigs) {
+              @for (shapeConfig of shipElement.shapeConfigs; track $index) {
+                @if (shapeConfig.name === 'rect') {
+                  <ko-rect [config]="shapeConfig"></ko-rect>
+                }
+                @if (shapeConfig.name === 'image') {
+                  <ko-image [config]="shapeConfig"></ko-image>
+                }
               }
             }
           }
         }
-      }
-    </ko-layer>
-  </ko-stage>
+      </ko-layer>
+    </ko-stage>
+  </div>
 </section>

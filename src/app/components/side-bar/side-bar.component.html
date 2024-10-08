@@ -8,9 +8,10 @@
               <mat-panel-title class="ship-element-name"> {{ shipElement.name }} </mat-panel-title>
               <mat-panel-description>{{ shipElement.tacticalValue }}TV</mat-panel-description>
             </mat-expansion-panel-header>
-            @for (shipElementNote of shipElement.notes; track $index) {
-              <p>{{ shipElementNote }}</p>
-            }
+            <app-ship-element
+              [shipElement]="shipElement"
+              (heldImageSrc)="onHeldImageSrcChange($event)"
+            ></app-ship-element>
           </mat-expansion-panel>
         }
       </mat-accordion>
