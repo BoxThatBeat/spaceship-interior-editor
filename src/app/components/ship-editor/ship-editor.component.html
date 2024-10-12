@@ -12,19 +12,17 @@
         }
       </ko-layer>
       <ko-layer #designLayer>
-        @for (shipElementRow of shipElements(); track $index) {
-          @for (shipElement of shipElementRow; track $index) {
-            <!-- Draw a ship element either with Konva shapes or an image -->
-            @if (shipElement && shipElement.shapeConfigs) {
-              @for (shapeConfig of shipElement.shapeConfigs; track $index) {
-                @if (shapeConfig.name === 'rect') {
-                  <ko-rect [config]="shapeConfig"></ko-rect>
-                }
-                @if (shapeConfig.name === 'image') {
-                  <ko-image [config]="shapeConfig"></ko-image>
-                }
-              }
-            }
+        @for (hullRectConfig of hullRectConfigs(); track $index) {
+          <ko-rect [config]="hullRectConfig"></ko-rect>
+        }
+      </ko-layer>
+      <ko-layer #shipElementsLayer>
+        @for (shipElementShape of shipElementShapes(); track $index) {
+          @if (shipElementShape.config.name === 'rect') {
+            <ko-rect [config]="shipElementShape.config"></ko-rect>
+          }
+          @if (shipElementShape.config.name === 'image') {
+            <ko-image [config]="shipElementShape.config"></ko-image>
           }
         }
       </ko-layer>
