@@ -4,9 +4,11 @@ import {
   effect,
   input,
   OnInit,
+  QueryList,
   signal,
   Signal,
   viewChild,
+  viewChildren,
   WritableSignal,
 } from '@angular/core';
 import { CoreShapeComponent, NgKonvaEventObject, StageComponent } from 'ng2-konva';
@@ -16,9 +18,13 @@ import { Shape } from 'konva/lib/Shape';
 import { EditorTool } from '../../models/editor-tool.enum';
 import { Vector2d } from 'konva/lib/types';
 import { ShipElement } from '../../models/ship-element';
-import { ImageConfig } from 'konva/lib/shapes/Image';
+import { Image, ImageConfig } from 'konva/lib/shapes/Image';
 import { ShipElementShape } from '../../models/ship-element-shape';
 import { KoShipElementComponent } from '../ko-ship-element/ko-ship-element.component';
+import { Transformer, TransformerConfig } from 'konva/lib/shapes/Transformer';
+import { Layer } from 'konva/lib/Layer';
+import { Node } from 'konva/lib/Node';
+import { Group } from 'konva/lib/Group';
 
 @Component({
   selector: 'app-ship-editor',
@@ -32,6 +38,11 @@ export class ShipEditorComponent implements OnInit {
   stage = viewChild.required(StageComponent);
   gridLayer: Signal<CoreShapeComponent> = viewChild.required('gridLayer');
   designLayer: Signal<CoreShapeComponent> = viewChild.required('designLayer');
+  shipElementsLayer: Signal<CoreShapeComponent> = viewChild.required('shipElementsLayer');
+
+  selector: Signal<CoreShapeComponent> = viewChild.required('selector');
+
+  shipElementImages: Signal<readonly CoreShapeComponent[]> = viewChildren('shipElementImage');
 
   gridRectConfigs: WritableSignal<Array<RectConfig>> = signal([]);
   hullRectConfigs: WritableSignal<Array<Array<RectConfig | undefined>>> = signal([]);
@@ -68,9 +79,15 @@ export class ShipEditorComponent implements OnInit {
   selectedTool = input<EditorTool>(EditorTool.NONE);
 
   public configStage: Partial<StageConfig> = {};
+  public transformConfig: Partial<TransformerConfig> = {
+    resizeEnabled: false,
+    rotateEnabled: true,
+    rotationSnaps: [0, 90, 180, 270],
+    rotationSnapTolerance: 45,
+    rotateAnchorOffset: 100,
+  };
 
   private dragging: boolean = false;
-  private shapeSelected: boolean = false;
   private selectedShape: Shape | undefined = undefined;
   private selectedElementStartPos: Vector2d | undefined = undefined;
 
@@ -80,6 +97,16 @@ export class ShipEditorComponent implements OnInit {
         this.gridLayer().getStage().show();
       } else {
         this.gridLayer().getStage().hide();
+      }
+    });
+
+    effect(() => {
+      this.shipElementImages();
+
+      if (this.shipElementImages().length > 0) {
+        const transformer = this.selector().getStage() as Transformer;
+        const latestShipElementImage = this.shipElementImages()[this.shipElementImages().length - 1].getStage() as Image
+        transformer.nodes([latestShipElementImage]);
       }
     });
   }
@@ -217,7 +244,6 @@ export class ShipEditorComponent implements OnInit {
       }
 
       this.selectedShape = undefined;
-      this.shapeSelected = false;
 
       // TODO: save original position of element and if placement is invalid, revert to original position and show error banner for a short period of time
     }
@@ -357,6 +383,10 @@ export class ShipEditorComponent implements OnInit {
       return shipElementShapes;
     });
 
-    console.log('Added new ship element shape: ' + newShipElementShape.shipElementId);
+    //console.log(this.selector());
+
+    // (this.selector() as Transformer).attachTo(newShipElementShape);
+
+    
   }
 }
