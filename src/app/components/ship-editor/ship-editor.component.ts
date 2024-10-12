@@ -11,24 +11,22 @@ import {
 } from '@angular/core';
 import { CoreShapeComponent, NgKonvaEventObject, StageComponent } from 'ng2-konva';
 import { StageConfig } from 'konva/lib/Stage';
-import { Layer } from 'konva/lib/Layer';
 import { Rect, RectConfig } from 'konva/lib/shapes/Rect';
-import { KonvaEventObject } from 'konva/lib/Node';
 import { Shape } from 'konva/lib/Shape';
 import { EditorTool } from '../../models/editor-tool.enum';
 import { Vector2d } from 'konva/lib/types';
 import { ShipElement } from '../../models/ship-element';
-import { ShipElementType } from '../../models/ship-element-type.enum';
 import { ImageConfig } from 'konva/lib/shapes/Image';
 import { ShipElementShape } from '../../models/ship-element-shape';
+import { KoShipElementComponent } from '../ko-ship-element/ko-ship-element.component';
 
 @Component({
   selector: 'app-ship-editor',
   standalone: true,
-  imports: [StageComponent, CoreShapeComponent],
+  imports: [StageComponent, CoreShapeComponent, KoShipElementComponent],
   templateUrl: './ship-editor.component.html',
   styleUrl: './ship-editor.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  changeDetection: ChangeDetectionStrategy.OnPush, //TODO check if this is causing bugs
 })
 export class ShipEditorComponent implements OnInit {
   stage = viewChild.required(StageComponent);
@@ -36,9 +34,7 @@ export class ShipEditorComponent implements OnInit {
   designLayer: Signal<CoreShapeComponent> = viewChild.required('designLayer');
 
   gridRectConfigs: WritableSignal<Array<RectConfig>> = signal([]);
-  //shipElements: WritableSignal<Array<Array<ShipElement | undefined>>> = signal([]); //TODO: Update to 3D for z-index
-
-  hullRectConfigs: WritableSignal<Array<Rect>> = signal([]);
+  hullRectConfigs: WritableSignal<Array<Array<RectConfig | undefined>>> = signal([]);
   shipElementShapes: WritableSignal<Array<ShipElementShape>> = signal([]);
 
   /**
@@ -75,7 +71,7 @@ export class ShipEditorComponent implements OnInit {
 
   private dragging: boolean = false;
   private shapeSelected: boolean = false;
-  private selectedShipElementShape: ShipElementShape | undefined = undefined;
+  private selectedShape: Shape | undefined = undefined;
   private selectedElementStartPos: Vector2d | undefined = undefined;
 
   constructor() {
@@ -132,22 +128,22 @@ export class ShipEditorComponent implements OnInit {
    * Initializes a 2D array of ship elements. Each element uses either a Kova Shape to repesent the element or an image
    */
   private initShipElements(): void {
-    // for (let x = 0; x <= this.editorWidth(); x += this.gridBlockSize()) {
-    //   this.shipElements.update((shipElements) => [
-    //     ...shipElements,
-    //     new Array<ShipElement | undefined>(this.editorHeight() / this.gridBlockSize()),
-    //   ]);
-    // }
+    for (let x = 0; x <= this.editorWidth(); x += this.gridBlockSize()) {
+      this.hullRectConfigs.update((hullRectConfigs) => [
+        ...hullRectConfigs,
+        new Array<ShipElement | undefined>(this.editorHeight() / this.gridBlockSize()),
+      ]);
+    }
 
-    // // init all elements to undefined
-    // for (let x = 0; x < this.editorWidth(); x += this.gridBlockSize()) {
-    //   for (let y = 0; y < this.editorHeight(); y += this.gridBlockSize()) {
-    //     this.shipElements.update((shipElements) => {
-    //       shipElements[x / this.gridBlockSize()][y / this.gridBlockSize()] = undefined;
-    //       return shipElements;
-    //     });
-    //   }
-    // }
+    // init all elements to undefined
+    for (let x = 0; x < this.editorWidth(); x += this.gridBlockSize()) {
+      for (let y = 0; y < this.editorHeight(); y += this.gridBlockSize()) {
+        this.hullRectConfigs.update((hullRectConfigs) => {
+          hullRectConfigs[x / this.gridBlockSize()][y / this.gridBlockSize()] = undefined;
+          return hullRectConfigs;
+        });
+      }
+    }
   }
 
   onToolStageDragStart(ngEvent: NgKonvaEventObject<MouseEvent>): void {
@@ -163,24 +159,20 @@ export class ShipEditorComponent implements OnInit {
         break;
       case EditorTool.ERASER:
         this.removeRoomAtPos(this.stage().getStage().getPointerPosition());
-        // if (ngEvent.event.target !== this.stage().getStage()) {
-        //   const shipElementShape = ngEvent.event.target as ShipElementShape;
-        //   if (shipElementShape) {
-        //     this.shipElementShapes.update((shipElementShapes) => { shipElementShapes.splice(shipElementShapes.indexOf(shipElementShape), 1); return shipElementShapes; });
-        //   } else {
-        //     console.log('error: no ship element shape found');
-        //   }
-        // }
         break;
       case EditorTool.NONE:
         if (ngEvent.event.target !== this.stage().getStage()) {
-          const shipElementShape = ngEvent.event.target as ShipElementShape;
+          const shape = ngEvent.event.target as Shape;
 
-          if (shipElementShape) {
-            this.bringToFront(shipElementShape);
+          if (shape) {
+            // Don't allow dragging of ship hulls
+            if (shape instanceof Rect) {
+              break;
+            }
+            this.bringToFront(shape);
 
-            this.selectedElementStartPos = { x: shipElementShape.x(), y: shipElementShape.y() } as Vector2d;
-            this.selectedShipElementShape = shipElementShape;
+            this.selectedElementStartPos = { x: shape.x(), y: shape.y() } as Vector2d;
+            this.selectedShape = shape;
           }
         }
         break;
@@ -199,18 +191,12 @@ export class ShipEditorComponent implements OnInit {
           break;
         case EditorTool.ERASER:
           this.removeRoomAtPos(this.stage().getStage().getPointerPosition());
-          // const shipElementShape = ngEvent.event.target as ShipElementShape;
-          // if (shipElementShape) {
-          //   this.shipElementShapes.update((shipElementShapes) => { shipElementShapes.splice(shipElementShapes.indexOf(shipElementShape), 1); return shipElementShapes; });
-          // } else {
-          //   console.log('error: no ship element shape found');
-          // }
           break;
         case EditorTool.NONE:
-          if (this.selectedShipElementShape) {
-            this.selectedShipElementShape.position({
-              x: this.selectedShipElementShape.x() + ngEvent.event.evt.movementX,
-              y: this.selectedShipElementShape.y() + ngEvent.event.evt.movementY,
+          if (this.selectedShape) {
+            this.selectedShape.position({
+              x: this.selectedShape.x() + ngEvent.event.evt.movementX,
+              y: this.selectedShape.y() + ngEvent.event.evt.movementY,
             });
           }
           break;
@@ -226,11 +212,11 @@ export class ShipEditorComponent implements OnInit {
     }
 
     if (this.selectedTool() === EditorTool.NONE) {
-      if (this.selectedShipElementShape) {
-        this.snapToGrid(this.selectedShipElementShape);
+      if (this.selectedShape) {
+        this.snapToGrid(this.selectedShape);
       }
 
-      this.selectedShipElementShape = undefined;
+      this.selectedShape = undefined;
       this.shapeSelected = false;
 
       // TODO: save original position of element and if placement is invalid, revert to original position and show error banner for a short period of time
@@ -254,7 +240,6 @@ export class ShipEditorComponent implements OnInit {
     }
 
     const gridSnappedPos = this.posSnappedToGrid(pos);
-    const gridCoords = this.posToGridCoords(gridSnappedPos);
 
     const img = document.createElement('img');
     img.src = this.currentlyHeldImageSrc();
@@ -266,10 +251,7 @@ export class ShipEditorComponent implements OnInit {
     };
 
     //TODO: get the shipElement object from the sidebar
-    this.shipElementShapes.update((shipElementShapes) => {
-      shipElementShapes.push(new ShipElementShape(new ShipElement('Hull', 'Other', 100, [], undefined, [image]), image));
-      return shipElementShapes;
-    });
+    this.addShipElement(new ShipElement('Hull', 'Other', 100, [], undefined), image);
   }
 
   // getShipElementAtMousePos(mousePos: Vector2d | null): ShipElement | undefined {
@@ -285,13 +267,11 @@ export class ShipEditorComponent implements OnInit {
       return;
     }
 
-    const snappedCoords = this.posSnappedToGrid(pos);
+    const gridCoords = this.posToGridCoords(pos);
 
-    if (this.hullRectConfigs().find((rect) => rect.x() === snappedCoords.x && rect.y() === snappedCoords.y)) {
-      return;
+    if (this.hullRectConfigs()[gridCoords.x][gridCoords.y] === undefined) {
+      this.addRect(pos);
     }
-    
-    this.addRect(snappedCoords);
   }
 
   removeRoomAtPos(pos: Vector2d | null): void {
@@ -301,21 +281,12 @@ export class ShipEditorComponent implements OnInit {
 
     const gridCoords = this.posToGridCoords(pos);
 
-    this.hullRectConfigs.update((rects) => {
-      const rect = rects.find((rect) => rect.x() === gridCoords.x && rect.y() === gridCoords.y);
-      if (rect) {
-        rect.destroy();
-        return rects.filter((r) => r !== rect);
-      }
-      return rects;
-    });
-
-    // if (this.shipElements()[gridCoords.x][gridCoords.y] !== undefined) {
-    //   this.shipElements.update((shipElements) => {
-    //     shipElements[gridCoords.x][gridCoords.y] = undefined;
-    //     return shipElements;
-    //   });
-    // }
+    if (this.hullRectConfigs()[gridCoords.x][gridCoords.y] !== undefined) {
+      this.hullRectConfigs.update((hullRectConfigs) => {
+        hullRectConfigs[gridCoords.x][gridCoords.y] = undefined;
+        return hullRectConfigs;
+      });
+    }
   }
 
   clearEditor(): void {
@@ -329,10 +300,13 @@ export class ShipEditorComponent implements OnInit {
       return;
     }
 
+    const gridSnappedPos = this.posSnappedToGrid(pos);
+    const gridCoords = this.posToGridCoords(gridSnappedPos);
+
     const newRectConfig = {
       name: 'rect',
-      x: pos.x,
-      y: pos.y,
+      x: gridSnappedPos.x,
+      y: gridSnappedPos.y,
       width: this.gridBlockSize(),
       height: this.gridBlockSize(),
       fill: '#808080',
@@ -340,9 +314,9 @@ export class ShipEditorComponent implements OnInit {
       strokeWidth: 1,
     } as RectConfig;
 
-    this.hullRectConfigs.update((rects) => {
-      rects.push(new Rect(newRectConfig));
-      return rects;
+    this.hullRectConfigs.update((hullRectConfigs) => {
+      hullRectConfigs[gridCoords.x][gridCoords.y] = newRectConfig;
+      return hullRectConfigs;
     });
   }
 
@@ -367,5 +341,22 @@ export class ShipEditorComponent implements OnInit {
 
   posToGridCoords(pos: Vector2d): Vector2d {
     return { x: Math.floor(pos.x / this.gridBlockSize()), y: Math.floor(pos.y / this.gridBlockSize()) };
+  }
+
+  addShipElement(shipElement: ShipElement, imageConfig: ImageConfig ): void {
+    if (!imageConfig.x || !imageConfig.y) {
+      console.log('error: imageConfig missing x or y');
+      return;
+    }
+
+    const gridCoords = this.posToGridCoords({x: imageConfig.x, y: imageConfig.y});
+    const newShipElementShape = new ShipElementShape(shipElement, gridCoords, imageConfig);
+
+    this.shipElementShapes.update((shipElementShapes) => {
+      shipElementShapes.push(newShipElementShape);
+      return shipElementShapes;
+    });
+
+    console.log('Added new ship element shape: ' + newShipElementShape.shipElementId);
   }
 }
