@@ -35,7 +35,7 @@ export class ShipEditorComponent implements OnInit {
   designLayer: Signal<CoreShapeComponent> = viewChild.required('designLayer');
 
   gridRectConfigs: WritableSignal<Array<RectConfig>> = signal([]);
-  shipElements: WritableSignal<Array<Array<ShipElement | undefined>>> = signal([]);
+  shipElements: WritableSignal<Array<Array<ShipElement | undefined>>> = signal([]); //TODO: Update to 3D for z-index
 
   /**
    * The image source string of the image currently being held by the user (with a mouse drag).
@@ -133,6 +133,16 @@ export class ShipEditorComponent implements OnInit {
         new Array<ShipElement | undefined>(this.editorHeight() / this.gridBlockSize()),
       ]);
     }
+
+    // init all elements to undefined
+    for (let x = 0; x < this.editorWidth(); x += this.gridBlockSize()) {
+      for (let y = 0; y < this.editorHeight(); y += this.gridBlockSize()) {
+        this.shipElements.update((shipElements) => {
+          shipElements[x / this.gridBlockSize()][y / this.gridBlockSize()] = undefined;
+          return shipElements;
+        });
+      }
+    }
   }
 
   onToolStageDragStart(ngEvent: NgKonvaEventObject<MouseEvent>): void {
@@ -160,9 +170,7 @@ export class ShipEditorComponent implements OnInit {
             break;
           }
 
-          const xGrid = Math.floor(pointerPos.x / this.gridBlockSize());
-          const yGrid = Math.floor(pointerPos.y / this.gridBlockSize());
-          this.selectedElementStartPos = { x: xGrid, y: yGrid } as Vector2d;
+          this.selectedElementStartPos = pointerPos;
         }
         break;
     }
@@ -212,21 +220,22 @@ export class ShipEditorComponent implements OnInit {
       if (this.selectedShape) {
         // Update position of ship element in 2D array
         if (this.selectedElementStartPos) {
-          const xGrid = Math.floor(this.selectedShape.x() / this.gridBlockSize());
-          const yGrid = Math.floor(this.selectedShape.y() / this.gridBlockSize());
+          this.snapToGrid(this.selectedShape);
+          const startGridCoords = this.posToGridCoords(this.selectedElementStartPos);
+          const destGridCoords = this.posToGridCoords(
+            this.posSnappedToGrid({ x: this.selectedShape.x(), y: this.selectedShape.y() }),
+          );
+          console.log('start grid coords: ', startGridCoords);
+          console.log('dest grid coords: ', destGridCoords);
+          console.log(this.shipElements());
           this.shipElements.update((shipElements) => {
-            if (this.selectedElementStartPos) {
-              const shipElement = shipElements[this.selectedElementStartPos.x][this.selectedElementStartPos.y];
-              shipElements[this.selectedElementStartPos.x][this.selectedElementStartPos.y] = undefined;
-              shipElements[xGrid][yGrid] = shipElement;
-              console.log('moved element from ', this.selectedElementStartPos, ' to ', { x: xGrid, y: yGrid });
-            }
+            const shipElement = shipElements[startGridCoords.x][startGridCoords.y];
+            shipElements[startGridCoords.x][startGridCoords.y] = undefined;
+            shipElements[destGridCoords.x][destGridCoords.y] = shipElement;
             return shipElements;
           });
           console.log(this.shipElements());
         }
-
-        this.snapToGrid(this.selectedShape);
       }
 
       this.selectedShape = undefined;
@@ -252,39 +261,32 @@ export class ShipEditorComponent implements OnInit {
       return;
     }
 
-    const gridXPos = Math.floor(pos.x / this.gridBlockSize()) * this.gridBlockSize();
-    const gridYPos = Math.floor(pos.y / this.gridBlockSize()) * this.gridBlockSize();
-
-    // Convert x,y coordinates to grid coordinates
-    const xGrid = Math.round(gridXPos / this.gridBlockSize());
-    const yGrid = Math.round(gridYPos / this.gridBlockSize());
+    const gridSnappedPos = this.posSnappedToGrid(pos);
+    const gridCoords = this.posToGridCoords(gridSnappedPos);
 
     const img = document.createElement('img');
     img.src = this.currentlyHeldImageSrc();
     let image: ImageConfig = {
       name: 'image',
       image: img,
-      x: pos.x,
-      y: pos.y,
-      //offsetX:
-      //offsetY:
+      x: gridSnappedPos.x,
+      y: gridSnappedPos.y,
     };
 
-    console.log(image);
-
     this.shipElements.update((shipElements) => {
-      shipElements[xGrid][yGrid] = new ShipElement('Hull', 'Other', 100, [], undefined, [image]); //TODO: propogate the ShipElement held instead of just the image src
+      shipElements[gridCoords.x][gridCoords.y] = new ShipElement('Hull', 'Other', 100, [], undefined, [image]); //TODO: propogate the ShipElement held instead of just the image src
       return shipElements;
     });
+
+    console.log(this.shipElements());
   }
 
   getShipElementAtMousePos(mousePos: Vector2d | null): ShipElement | undefined {
     if (!mousePos) {
       return undefined;
     }
-    const xGrid = Math.floor(mousePos.x / this.gridBlockSize());
-    const yGrid = Math.floor(mousePos.y / this.gridBlockSize());
-    return this.shipElements()[xGrid][yGrid];
+    const gridCoords = this.posToGridCoords(mousePos);
+    return this.shipElements()[gridCoords.x][gridCoords.y];
   }
 
   addRoomAtPos(pos: Vector2d | null): void {
@@ -292,10 +294,9 @@ export class ShipEditorComponent implements OnInit {
       return;
     }
 
-    const xGrid = Math.floor(pos.x / this.gridBlockSize());
-    const yGrid = Math.floor(pos.y / this.gridBlockSize());
+    const gridCoords = this.posToGridCoords(pos);
 
-    if (this.shipElements()[xGrid][yGrid] === undefined) {
+    if (this.shipElements()[gridCoords.x][gridCoords.y] === undefined) {
       this.addRect(pos);
     }
   }
@@ -305,12 +306,11 @@ export class ShipEditorComponent implements OnInit {
       return;
     }
 
-    const xGrid = Math.floor(pos.x / this.gridBlockSize());
-    const yGrid = Math.floor(pos.y / this.gridBlockSize());
+    const gridCoords = this.posToGridCoords(pos);
 
-    if (this.shipElements()[xGrid][yGrid] !== undefined) {
+    if (this.shipElements()[gridCoords.x][gridCoords.y] !== undefined) {
       this.shipElements.update((shipElements) => {
-        shipElements[xGrid][yGrid] = undefined;
+        shipElements[gridCoords.x][gridCoords.y] = undefined;
         return shipElements;
       });
     }
@@ -325,17 +325,14 @@ export class ShipEditorComponent implements OnInit {
     if (!pos) {
       return;
     }
-    const gridXPos = Math.floor(pos.x / this.gridBlockSize()) * this.gridBlockSize();
-    const gridYPos = Math.floor(pos.y / this.gridBlockSize()) * this.gridBlockSize();
 
-    // Convert x,y coordinates to grid coordinates
-    const xGrid = Math.round(gridXPos / this.gridBlockSize());
-    const yGrid = Math.round(gridYPos / this.gridBlockSize());
+    const gridSnappedPos = this.posSnappedToGrid(pos);
+    const gridCoords = this.posToGridCoords(gridSnappedPos);
 
     const newRectConfig = {
       name: 'rect',
-      x: gridXPos,
-      y: gridYPos,
+      x: gridSnappedPos.x,
+      y: gridSnappedPos.y,
       width: this.gridBlockSize(),
       height: this.gridBlockSize(),
       fill: '#808080',
@@ -344,7 +341,7 @@ export class ShipEditorComponent implements OnInit {
     } as RectConfig;
 
     this.shipElements.update((shipElements) => {
-      shipElements[xGrid][yGrid] = new ShipElement('Hull', 'Other', 100, [], undefined, [newRectConfig]);
+      shipElements[gridCoords.x][gridCoords.y] = new ShipElement('Hull', 'Other', 100, [], undefined, [newRectConfig]);
       return shipElements;
     });
   }
@@ -359,5 +356,16 @@ export class ShipEditorComponent implements OnInit {
       x: Math.round(shape.x() / this.gridBlockSize()) * this.gridBlockSize(),
       y: Math.round(shape.y() / this.gridBlockSize()) * this.gridBlockSize(),
     });
+  }
+
+  posSnappedToGrid(pos: Vector2d): Vector2d {
+    return {
+      x: Math.floor(pos.x / this.gridBlockSize()) * this.gridBlockSize(),
+      y: Math.floor(pos.y / this.gridBlockSize()) * this.gridBlockSize(),
+    };
+  }
+
+  posToGridCoords(pos: Vector2d): Vector2d {
+    return { x: Math.floor(pos.x / this.gridBlockSize()), y: Math.floor(pos.y / this.gridBlockSize()) };
   }
 }
