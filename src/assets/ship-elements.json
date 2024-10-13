@@ -78,7 +78,7 @@
   {
     "name": "Laser Gun",
     "type": "Weapons",
-    "image": "/assets/ship-element-images/laser.png",
+    "imageFileName": "/assets/ship-element-images/laser.png",
     "notes": ["Takes up 2x1 on grid", "Fires lasers!"],
     "tacticalValue": 150
   },

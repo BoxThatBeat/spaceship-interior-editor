@@ -1,10 +1,10 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   effect,
   input,
   OnInit,
-  QueryList,
   signal,
   Signal,
   viewChild,
@@ -22,9 +22,6 @@ import { Image, ImageConfig } from 'konva/lib/shapes/Image';
 import { ShipElementShape } from '../../models/ship-element-shape';
 import { KoShipElementComponent } from '../ko-ship-element/ko-ship-element.component';
 import { Transformer, TransformerConfig } from 'konva/lib/shapes/Transformer';
-import { Layer } from 'konva/lib/Layer';
-import { Node } from 'konva/lib/Node';
-import { Group } from 'konva/lib/Group';
 
 @Component({
   selector: 'app-ship-editor',
@@ -32,16 +29,18 @@ import { Group } from 'konva/lib/Group';
   imports: [StageComponent, CoreShapeComponent, KoShipElementComponent],
   templateUrl: './ship-editor.component.html',
   styleUrl: './ship-editor.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush, //TODO check if this is causing bugs
+  //changeDetection: ChangeDetectionStrategy.OnPush, //TODO check if this is causing bugs
 })
 export class ShipEditorComponent implements OnInit {
   stage = viewChild.required(StageComponent);
   gridLayer: Signal<CoreShapeComponent> = viewChild.required('gridLayer');
   designLayer: Signal<CoreShapeComponent> = viewChild.required('designLayer');
   shipElementsLayer: Signal<CoreShapeComponent> = viewChild.required('shipElementsLayer');
-
   selector: Signal<CoreShapeComponent> = viewChild.required('selector');
 
+  /**
+   * The ship element images that are currently created on the canvas
+   */
   shipElementImages: Signal<readonly CoreShapeComponent[]> = viewChildren('shipElementImage');
 
   gridRectConfigs: WritableSignal<Array<RectConfig>> = signal([]);
@@ -49,9 +48,9 @@ export class ShipEditorComponent implements OnInit {
   shipElementShapes: WritableSignal<Array<ShipElementShape>> = signal([]);
 
   /**
-   * The image source string of the image currently being held by the user (with a mouse drag).
+   * The ShipElement image currently being held by the user (with a mouse drag).
    */
-  currentlyHeldImageSrc = input.required<string>();
+  currentlyHeldShipElement = input<ShipElement>();
 
   /**
    * Width of the designer.
@@ -78,13 +77,25 @@ export class ShipEditorComponent implements OnInit {
    */
   selectedTool = input<EditorTool>(EditorTool.NONE);
 
+  /**
+   * Computed total tactical value of all ship elements on the canvas.
+   */
+  // totalTV: Signal<number> = computed(() => {
+  //   let total = 0;
+  //   this.shipElementShapes().forEach((shape: ShipElementShape) => {
+  //     total += shape.shipElement.tacticalValue;
+  //   });
+  //   return total;
+  // });
+  public totalTV: number = 0;
+
   public configStage: Partial<StageConfig> = {};
   public transformConfig: Partial<TransformerConfig> = {
     resizeEnabled: false,
     rotateEnabled: true,
     rotationSnaps: [0, 90, 180, 270],
     rotationSnapTolerance: 45,
-    rotateAnchorOffset: 100,
+    rotateAnchorOffset: 50,
   };
 
   private dragging: boolean = false;
@@ -99,22 +110,6 @@ export class ShipEditorComponent implements OnInit {
         this.gridLayer().getStage().hide();
       }
     });
-
-    effect(() => {
-      this.shipElementImages();
-
-      if (this.shipElementImages().length > 0) {
-        const transformer = this.selector().getStage() as Transformer;
-        const latestShipElementImage = this.shipElementImages()[this.shipElementImages().length - 1].getStage() as Image
-        transformer.nodes([latestShipElementImage]);
-      }
-    });
-  }
-
-  removeStageListeners() {
-    this.stage().getStage().off('mousedown');
-    this.stage().getStage().off('mouseup');
-    this.stage().getStage().off('mousemove');
   }
 
   ngOnInit(): void {
@@ -192,15 +187,17 @@ export class ShipEditorComponent implements OnInit {
           const shape = ngEvent.event.target as Shape;
 
           if (shape) {
-            // Don't allow dragging of ship hulls
-            if (shape instanceof Rect) {
-              break;
+            if (shape instanceof Image) {
+              this.bringToFront(shape);
+              (this.selector().getStage() as Transformer).nodes([shape]);
+  
+              this.selectedElementStartPos = { x: shape.x(), y: shape.y() } as Vector2d;
+              this.selectedShape = shape;
             }
-            this.bringToFront(shape);
-
-            this.selectedElementStartPos = { x: shape.x(), y: shape.y() } as Vector2d;
-            this.selectedShape = shape;
           }
+        } else if (ngEvent.event.target === this.stage().getStage()) {
+          // Deselect elements if click on empty space
+          (this.selector().getStage() as Transformer).nodes([]);
         }
         break;
     }
@@ -240,6 +237,11 @@ export class ShipEditorComponent implements OnInit {
 
     if (this.selectedTool() === EditorTool.NONE) {
       if (this.selectedShape) {
+
+        // Validate placement of element
+        // check if element is placed on top of another element
+        // Search for another element at the same position in the shipElementShapes array
+
         this.snapToGrid(this.selectedShape);
       }
 
@@ -260,33 +262,29 @@ export class ShipEditorComponent implements OnInit {
     this.stage().getStage().setPointersPositions(event);
 
     let pos = this.stage().getStage().getPointerPosition();
-
     if (pos === null) {
       return;
     }
 
-    const gridSnappedPos = this.posSnappedToGrid(pos);
+    const heldShipElement = this.currentlyHeldShipElement();
+    if (heldShipElement) {
+      const gridSnappedPos = this.posSnappedToGrid(pos);
 
-    const img = document.createElement('img');
-    img.src = this.currentlyHeldImageSrc();
-    let image: ImageConfig = {
-      name: 'image',
-      image: img,
-      x: gridSnappedPos.x,
-      y: gridSnappedPos.y,
-    };
-
-    //TODO: get the shipElement object from the sidebar
-    this.addShipElement(new ShipElement('Hull', 'Other', 100, [], undefined), image);
+      const img = document.createElement('img');
+      const imageUrl = heldShipElement.imageUrl;
+      if (imageUrl !== undefined) {
+        img.src = imageUrl;
+      }
+      let image: ImageConfig = {
+        name: 'image',
+        image: img,
+        x: gridSnappedPos.x,
+        y: gridSnappedPos.y,
+      };
+  
+      this.addShipElement(heldShipElement, image);
+    }
   }
-
-  // getShipElementAtMousePos(mousePos: Vector2d | null): ShipElement | undefined {
-  //   if (!mousePos) {
-  //     return undefined;
-  //   }
-  //   const gridCoords = this.posToGridCoords(mousePos);
-  //   return this.shipElements()[gridCoords.x][gridCoords.y];
-  // }
 
   addRoomAtPos(pos: Vector2d | null): void {
     if (!pos) {
@@ -383,10 +381,6 @@ export class ShipEditorComponent implements OnInit {
       return shipElementShapes;
     });
 
-    //console.log(this.selector());
-
-    // (this.selector() as Transformer).attachTo(newShipElementShape);
-
-    
+    this.totalTV += shipElement.tacticalValue;
   }
 }

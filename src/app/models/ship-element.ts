@@ -4,6 +4,7 @@ export class ShipElement {
     public type: string,
     public tacticalValue: number,
     public notes?: string[],
-    public image?: string, //TODO make not optional
+    public imageFileName?: string, //TODO make not optional
+    public imageUrl?: string
   ) {}
 }

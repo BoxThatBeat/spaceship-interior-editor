@@ -26,7 +26,7 @@ export class AppComponent {
   editorComponent = viewChild.required(ShipEditorComponent);
 
   public currentTool: EditorTool = EditorTool.NONE;
-  public currentlyHeldImageSrc: string = '';
+  public currentlyHeldShipElement: ShipElement | undefined = undefined;
 
   public gridEnabled: boolean = false;
   public editorWidth: number = 1000;
@@ -46,7 +46,7 @@ export class AppComponent {
     this.editorComponent().clearEditor();
   }
 
-  public onHeldImageSrcChange(heldImageSrc: string): void {
-    this.currentlyHeldImageSrc = heldImageSrc;
+  public onHeldShipElementChanged(shipElement: ShipElement): void {
+    this.currentlyHeldShipElement = shipElement;
   }
 }

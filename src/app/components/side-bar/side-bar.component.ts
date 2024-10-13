@@ -12,10 +12,16 @@ import { ShipElementComponent } from '../ship-element/ship-element.component';
   styleUrl: './side-bar.component.scss',
 })
 export class SideBarComponent {
-  heldImageSrcChanged = output<string>();
+  heldShipElement = output<ShipElement>();
 
   public onHeldImageSrcChange(heldImageSrc: string): void {
-    this.heldImageSrcChanged.emit(heldImageSrc);
+    const shipElementPickedUp = this.shipElements().find((shipElement) => shipElement.imageFileName?.split('/').pop() === heldImageSrc.split('/').pop());
+    if (shipElementPickedUp) {
+      shipElementPickedUp.imageUrl = heldImageSrc;
+      this.heldShipElement.emit(shipElementPickedUp);
+    } else {
+      console.error('Could not find ship element with image src: ' + heldImageSrc);
+    }
   }
 
   /**

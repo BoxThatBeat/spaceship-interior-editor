@@ -10,7 +10,7 @@
   <div class="image-container">
     <img
       #shipElementImage
-      src="{{ shipElement().image }}"
+      src="{{ shipElement().imageFileName }}"
       alt="{{ shipElement().name }}"
       draggable="true"
       (dragstart)="onImageDrag($event)"
