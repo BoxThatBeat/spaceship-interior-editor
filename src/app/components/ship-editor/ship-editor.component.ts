@@ -1,7 +1,5 @@
 import {
-  ChangeDetectionStrategy,
   Component,
-  computed,
   effect,
   input,
   OnInit,
@@ -121,7 +119,7 @@ export class ShipEditorComponent implements OnInit {
     };
 
     this.initGrid();
-    this.initShipElements();
+    this.initHullRectArray();
   }
 
   /**
@@ -147,9 +145,9 @@ export class ShipEditorComponent implements OnInit {
   }
 
   /**
-   * Initializes a 2D array of ship elements. Each element uses either a Kova Shape to repesent the element or an image
+   * Initializes a 2D array of hull rects
    */
-  private initShipElements(): void {
+  private initHullRectArray(): void {
     for (let x = 0; x <= this.editorWidth(); x += this.gridBlockSize()) {
       this.hullRectConfigs.update((hullRectConfigs) => [
         ...hullRectConfigs,
@@ -166,6 +164,50 @@ export class ShipEditorComponent implements OnInit {
         });
       }
     }
+  }
+
+  onStageScroll(ngEventObj: NgKonvaEventObject<WheelEvent>): void {
+    if (!ngEventObj.event) {
+      return;
+    }
+    
+    const evt = ngEventObj.event.evt;
+    evt.preventDefault();
+    
+    const scaleBy = 1.05;
+
+    const stage = this.stage().getStage();
+
+    var oldScale = stage.scaleX();
+    var pointer = stage.getPointerPosition();
+
+    if (!pointer) {
+      return;
+    }
+
+    var mousePointTo = {
+      x: (pointer.x - stage.x()) / oldScale,
+      y: (pointer.y - stage.y()) / oldScale,
+    };
+
+    // how to scale? Zoom in? Or zoom out?
+    let direction = evt.deltaY > 0 ? 1 : -1;
+
+    // when we zoom on trackpad, e.evt.ctrlKey is true
+    // in that case lets revert direction
+    if (evt.ctrlKey) {
+      direction = -direction;
+    }
+
+    var newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+
+    stage.scale({ x: newScale, y: newScale });
+
+    var newPos = {
+      x: pointer.x - mousePointTo.x * newScale,
+      y: pointer.y - mousePointTo.y * newScale,
+    };
+    stage.position(newPos);
   }
 
   onToolStageDragStart(ngEvent: NgKonvaEventObject<MouseEvent>): void {
@@ -316,7 +358,9 @@ export class ShipEditorComponent implements OnInit {
   clearEditor(): void {
     this.hullRectConfigs.set([]);
     this.shipElementShapes.set([]);
-    this.initShipElements();
+    this.totalTV = 0;
+    (this.selector().getStage() as Transformer).nodes([]);
+    this.initHullRectArray();
   }
 
   addRect(pos: Vector2d | null): void {
@@ -333,9 +377,9 @@ export class ShipEditorComponent implements OnInit {
       y: gridSnappedPos.y,
       width: this.gridBlockSize(),
       height: this.gridBlockSize(),
-      fill: '#808080',
+      fill: '#CDCDCD',
       stroke: '#fffff',
-      strokeWidth: 1,
+      strokeWidth: 2,
     } as RectConfig;
 
     this.hullRectConfigs.update((hullRectConfigs) => {

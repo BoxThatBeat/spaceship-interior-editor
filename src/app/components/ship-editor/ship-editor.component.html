@@ -6,6 +6,7 @@
       (mousedown)="onToolStageDragStart($event)"
       (mouseup)="onToolStageDragEnd($event)"
       (mousemove)="onToolStageDragMove($event)"
+      (wheel)="onStageScroll($event)"
     >
       <ko-layer #gridLayer>
         @for (rectConfig of gridRectConfigs(); track $index) {
