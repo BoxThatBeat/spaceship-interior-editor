@@ -28,10 +28,12 @@ export class AppComponent {
   public currentTool: EditorTool = EditorTool.NONE;
   public currentlyHeldShipElement: ShipElement | undefined = undefined;
 
-  public gridEnabled: boolean = false;
-  public editorWidth: number = 1000;
-  public editorHeight: number = 1000;
+  public gridEnabled: boolean = true;
+  public editorWidth: number = 2000; //TODO: make 3000 but have an initial scale and also make toobar fixed width
+  public editorHeight: number = 1000; //TODO: make 1500?
   public gridBlockSize: number = 100;
+  public initialStageScale: number = 0.5;
+  public zoomScaleBy: number = 1.05;
   public shipElements: ShipElement[] = shipElementsJson as ShipElement[];
 
   public onToolChange(tool: EditorTool): void {

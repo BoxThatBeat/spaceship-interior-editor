@@ -1,4 +1,5 @@
 import {
+  AfterViewInit,
   Component,
   effect,
   input,
@@ -30,7 +31,7 @@ import { Transformer, TransformerConfig } from 'konva/lib/shapes/Transformer';
   styleUrl: './ship-editor.component.scss',
   //changeDetection: ChangeDetectionStrategy.OnPush, //TODO check if this is causing bugs
 })
-export class ShipEditorComponent implements OnInit {
+export class ShipEditorComponent implements OnInit, AfterViewInit {
   stage = viewChild.required(StageComponent);
   gridLayer: Signal<CoreShapeComponent> = viewChild.required('gridLayer');
   designLayer: Signal<CoreShapeComponent> = viewChild.required('designLayer');
@@ -77,6 +78,16 @@ export class ShipEditorComponent implements OnInit {
   selectedTool = input<EditorTool>(EditorTool.NONE);
 
   /**
+   * The initial stage scaling (ex: 0.90)
+   */
+  initialStageScale = input.required<number>();
+
+  /**
+   * How quickly the zooming occurs (per scroll wheel event, ex: 1.05) -> must be above 1
+   */
+  zoomScaleBy = input.required<number>();
+
+  /**
    * Computed total tactical value of all ship elements on the canvas.
    */
   // totalTV: Signal<number> = computed(() => {
@@ -101,6 +112,7 @@ export class ShipEditorComponent implements OnInit {
   private selectedShape: Shape | undefined = undefined;
   private selectedElementStartPos: Vector2d | undefined = undefined;
 
+  private currentStagePos: Vector2d = { x:0, y:0 } as Vector2d;
   private currentScale: number = 1.0;
 
   constructor() {
@@ -123,6 +135,12 @@ export class ShipEditorComponent implements OnInit {
 
     this.initGrid();
     this.initHullRectArray();
+  }
+
+  ngAfterViewInit(): void {
+    //Apply initial zoom level
+    this.stage().getStage().scale({ x: this.initialStageScale(), y: this.initialStageScale() });
+    this.currentScale = this.initialStageScale();
   }
 
   /**
@@ -176,45 +194,40 @@ export class ShipEditorComponent implements OnInit {
     
     const evt = ngEventObj.event.evt;
     evt.preventDefault();
-    
-    const scaleBy = 1.05;
 
     const stage = this.stage().getStage();
-
-    var oldScale = stage.scaleX();
-    var pointer = stage.getPointerPosition();
+    const oldScale = stage.scaleX();
+    const pointer = stage.getPointerPosition();
 
     if (!pointer) {
       return;
     }
 
-    // var mousePointTo = {
-    //   x: (pointer.x - stage.x()) / oldScale,
-    //   y: (pointer.y - stage.y()) / oldScale,
-    // };
+    const mousePointTo = {
+      x: (pointer.x - stage.x()) / oldScale,
+      y: (pointer.y - stage.y()) / oldScale,
+    };
 
-    // how to scale? Zoom in? Or zoom out?
+    // Zoom direction
     let direction = evt.deltaY > 0 ? 1 : -1;
 
     // when we zoom on trackpad, e.evt.ctrlKey is true
-    // in that case lets revert direction
+    // In this case, reverse direction of zooming
     if (evt.ctrlKey) {
       direction = -direction;
     }
 
-    var newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+    const newScale = direction > 0 ? oldScale * this.zoomScaleBy() : oldScale / this.zoomScaleBy();
+    const newPos = {
+      x: pointer.x - mousePointTo.x * newScale,
+      y: pointer.y - mousePointTo.y * newScale,
+    };
 
     stage.scale({ x: newScale, y: newScale });
+    stage.position(newPos);
 
     this.currentScale = newScale;
-
-    console.log('oldScale: ' + oldScale + ', newScale: ' + newScale);
-
-    // var newPos = {
-    //   x: pointer.x - mousePointTo.x * newScale,
-    //   y: pointer.y - mousePointTo.y * newScale,
-    // };
-    //stage.position(newPos);
+    this.currentStagePos = newPos;
 
     //NOTE: block size does not need to be scaled as the whole stage is acting as a different size,
     // so if we scale by half, the pixels are half the size essentially.
@@ -271,8 +284,8 @@ export class ShipEditorComponent implements OnInit {
         case EditorTool.NONE:
           if (this.selectedShape) {
             this.selectedShape.position({
-              x: this.selectedShape.x() + ngEvent.event.evt.movementX,
-              y: this.selectedShape.y() + ngEvent.event.evt.movementY,
+              x: this.selectedShape.x() + ngEvent.event.evt.movementX / this.currentScale,
+              y: this.selectedShape.y() + ngEvent.event.evt.movementY / this.currentScale,
             });
           }
           break;
@@ -426,7 +439,8 @@ export class ShipEditorComponent implements OnInit {
       return null;
     }
 
-    return { x: pos.x / this.currentScale, y: pos.y / this.currentScale } as Vector2d;
+    // transform the mouse pos relative to the origin of the stage and scale it by the stage's current scale
+    return { x: (pos.x - this.currentStagePos.x) / this.currentScale, y: (pos.y - this.currentStagePos.y) / this.currentScale } as Vector2d;;
   }
 
   addShipElement(shipElement: ShipElement, imageConfig: ImageConfig ): void {
