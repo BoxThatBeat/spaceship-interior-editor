@@ -2,6 +2,7 @@ import {
   Component,
   effect,
   input,
+  model,
   OnInit,
   signal,
   Signal,
@@ -63,7 +64,7 @@ export class ShipEditorComponent implements OnInit {
   /**
    * The size of each grid block side in pixels.
    */
-  gridBlockSize = input.required<number>();
+  gridBlockSize = model.required<number>();
 
   /**
    * Whether the grid is enabled.
@@ -99,6 +100,8 @@ export class ShipEditorComponent implements OnInit {
   private dragging: boolean = false;
   private selectedShape: Shape | undefined = undefined;
   private selectedElementStartPos: Vector2d | undefined = undefined;
+
+  private currentScale: number = 1.0;
 
   constructor() {
     effect(() => {
@@ -185,10 +188,10 @@ export class ShipEditorComponent implements OnInit {
       return;
     }
 
-    var mousePointTo = {
-      x: (pointer.x - stage.x()) / oldScale,
-      y: (pointer.y - stage.y()) / oldScale,
-    };
+    // var mousePointTo = {
+    //   x: (pointer.x - stage.x()) / oldScale,
+    //   y: (pointer.y - stage.y()) / oldScale,
+    // };
 
     // how to scale? Zoom in? Or zoom out?
     let direction = evt.deltaY > 0 ? 1 : -1;
@@ -203,11 +206,18 @@ export class ShipEditorComponent implements OnInit {
 
     stage.scale({ x: newScale, y: newScale });
 
-    var newPos = {
-      x: pointer.x - mousePointTo.x * newScale,
-      y: pointer.y - mousePointTo.y * newScale,
-    };
-    stage.position(newPos);
+    this.currentScale = newScale;
+
+    console.log('oldScale: ' + oldScale + ', newScale: ' + newScale);
+
+    // var newPos = {
+    //   x: pointer.x - mousePointTo.x * newScale,
+    //   y: pointer.y - mousePointTo.y * newScale,
+    // };
+    //stage.position(newPos);
+
+    //NOTE: block size does not need to be scaled as the whole stage is acting as a different size,
+    // so if we scale by half, the pixels are half the size essentially.
   }
 
   onToolStageDragStart(ngEvent: NgKonvaEventObject<MouseEvent>): void {
@@ -219,10 +229,10 @@ export class ShipEditorComponent implements OnInit {
 
     switch (this.selectedTool()) {
       case EditorTool.BRUSH:
-        this.addRoomAtPos(this.stage().getStage().getPointerPosition());
+        this.addRoomAtPos(this.getScaledPosition(this.stage().getStage().getPointerPosition()));
         break;
       case EditorTool.ERASER:
-        this.removeRoomAtPos(this.stage().getStage().getPointerPosition());
+        this.removeRoomAtPos(this.getScaledPosition(this.stage().getStage().getPointerPosition()));
         break;
       case EditorTool.NONE:
         if (ngEvent.event.target !== this.stage().getStage()) {
@@ -253,10 +263,10 @@ export class ShipEditorComponent implements OnInit {
     if (this.dragging) {
       switch (this.selectedTool()) {
         case EditorTool.BRUSH:
-          this.addRoomAtPos(this.stage().getStage().getPointerPosition());
+          this.addRoomAtPos(this.getScaledPosition(this.stage().getStage().getPointerPosition()));
           break;
         case EditorTool.ERASER:
-          this.removeRoomAtPos(this.stage().getStage().getPointerPosition());
+          this.removeRoomAtPos(this.getScaledPosition(this.stage().getStage().getPointerPosition()));
           break;
         case EditorTool.NONE:
           if (this.selectedShape) {
@@ -303,7 +313,7 @@ export class ShipEditorComponent implements OnInit {
     // register event position
     this.stage().getStage().setPointersPositions(event);
 
-    let pos = this.stage().getStage().getPointerPosition();
+    let pos = this.getScaledPosition(this.stage().getStage().getPointerPosition());
     if (pos === null) {
       return;
     }
@@ -409,6 +419,14 @@ export class ShipEditorComponent implements OnInit {
 
   posToGridCoords(pos: Vector2d): Vector2d {
     return { x: Math.floor(pos.x / this.gridBlockSize()), y: Math.floor(pos.y / this.gridBlockSize()) };
+  }
+
+  getScaledPosition(pos: Vector2d | null): Vector2d | null {
+    if (!pos) {
+      return null;
+    }
+
+    return { x: pos.x / this.currentScale, y: pos.y / this.currentScale } as Vector2d;
   }
 
   addShipElement(shipElement: ShipElement, imageConfig: ImageConfig ): void {

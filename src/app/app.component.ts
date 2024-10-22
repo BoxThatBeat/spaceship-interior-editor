@@ -29,8 +29,8 @@ export class AppComponent {
   public currentlyHeldShipElement: ShipElement | undefined = undefined;
 
   public gridEnabled: boolean = false;
-  public editorWidth: number = 3000;
-  public editorHeight: number = 3000;
+  public editorWidth: number = 1000;
+  public editorHeight: number = 1000;
   public gridBlockSize: number = 100;
   public shipElements: ShipElement[] = shipElementsJson as ShipElement[];
 
