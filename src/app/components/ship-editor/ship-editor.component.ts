@@ -3,7 +3,6 @@ import {
   Component,
   effect,
   input,
-  model,
   OnInit,
   signal,
   Signal,
@@ -13,7 +12,7 @@ import {
 } from '@angular/core';
 import { CoreShapeComponent, NgKonvaEventObject, StageComponent } from 'ng2-konva';
 import { StageConfig } from 'konva/lib/Stage';
-import { Rect, RectConfig } from 'konva/lib/shapes/Rect';
+import { RectConfig } from 'konva/lib/shapes/Rect';
 import { Shape } from 'konva/lib/Shape';
 import { EditorTool } from '../../models/editor-tool.enum';
 import { Vector2d } from 'konva/lib/types';
@@ -65,7 +64,17 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   /**
    * The size of each grid block side in pixels.
    */
-  gridBlockSize = model.required<number>();
+  gridBlockSize = input.required<number>();
+
+  /**
+   * The number of grid squares that make up the width
+   */
+  gridWidth = input.required<number>();
+
+  /**
+   * The number of grid squares that make up the height
+   */
+  gridHeight = input.required<number>();
 
   /**
    * Whether the grid is enabled.
@@ -147,13 +156,13 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
    * Initializes the grid layer with a grid of rectangles.
    */
   private initGrid(): void {
-    for (let x = 0; x < this.editorWidth(); x += this.gridBlockSize()) {
-      for (let y = 0; y < this.editorHeight(); y += this.gridBlockSize()) {
+    for (let x = 0; x < this.gridWidth(); x++) {
+      for (let y = 0; y < this.gridHeight(); y++) {
         this.gridRectConfigs.update((rects) => [
           ...rects,
           {
-            x: x,
-            y: y,
+            x: x * this.gridBlockSize(),
+            y: y * this.gridBlockSize(),
             width: this.gridBlockSize(),
             height: this.gridBlockSize(),
             stroke: '#D3D3D3',
@@ -169,18 +178,18 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
    * Initializes a 2D array of hull rects
    */
   private initHullRectArray(): void {
-    for (let x = 0; x <= this.editorWidth(); x += this.gridBlockSize()) {
+    for (let x = 0; x <= this.gridWidth(); x++) {
       this.hullRectConfigs.update((hullRectConfigs) => [
         ...hullRectConfigs,
-        new Array<ShipElement | undefined>(this.editorHeight() / this.gridBlockSize()),
+        new Array<ShipElement | undefined>(this.gridHeight()),
       ]);
     }
 
     // init all elements to undefined
-    for (let x = 0; x < this.editorWidth(); x += this.gridBlockSize()) {
-      for (let y = 0; y < this.editorHeight(); y += this.gridBlockSize()) {
+    for (let x = 0; x < this.gridWidth(); x++) {
+      for (let y = 0; y < this.gridHeight(); y++) {
         this.hullRectConfigs.update((hullRectConfigs) => {
-          hullRectConfigs[x / this.gridBlockSize()][y / this.gridBlockSize()] = undefined;
+          hullRectConfigs[x][y] = undefined;
           return hullRectConfigs;
         });
       }

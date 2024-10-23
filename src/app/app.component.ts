@@ -29,10 +29,12 @@ export class AppComponent {
   public currentlyHeldShipElement: ShipElement | undefined = undefined;
 
   public gridEnabled: boolean = true;
-  public editorWidth: number = 2000; //TODO: make 3000 but have an initial scale and also make toobar fixed width
-  public editorHeight: number = 1000; //TODO: make 1500?
-  public gridBlockSize: number = 100;
-  public initialStageScale: number = 0.5;
+  public editorWidth: number = 1000; //TODO: make this be based on the available space using bounding box
+  public editorHeight: number = 500; 
+  public gridBlockSize: number = 300; // 300px per block gives enough detail for images in a square
+  public gridWidth: number = 20;
+  public gridHeight: number = 10;
+  public initialStageScale: number = 0.25;
   public zoomScaleBy: number = 1.05;
   public shipElements: ShipElement[] = shipElementsJson as ShipElement[];
 
