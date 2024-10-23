@@ -6,6 +6,34 @@
     "tacticalValue": 100
   },
   {
+    "name": "Gatling Gun",
+    "type": "Weapons",
+    "imageFileName": "/assets/ship-element-images/GatlingGun.png",
+    "notes": ["Takes up 2x1 on grid"],
+    "tacticalValue": 100
+  },
+  {
+    "name": "Laser Gun",
+    "type": "Weapons",
+    "imageFileName": "/assets/ship-element-images/LaserGun.png",
+    "notes": ["Takes up 2x1 on grid", "Blocked by shields"],
+    "tacticalValue": 150
+  },
+  {
+    "name": "Double Laser Gun",
+    "type": "Weapons",
+    "imageFileName": "/assets/ship-element-images/DoubleLaserGun.png",
+    "notes": ["Takes up 2x1 on grid", "Blocked by shields"],
+    "tacticalValue": 250
+  },
+  {
+    "name": "Gauss Rifle",
+    "type": "Weapons",
+    "imageFileName": "/assets/ship-element-images/GaussRifle.png",
+    "notes": ["Penetrates shields"],
+    "tacticalValue": 200
+  },
+  {
     "name": "Scatter Missile Launcher 2x",
     "type": "Weapons",
     "imageFileName": "/assets/ship-element-images/ScatterMissileLauncher.png",
@@ -20,27 +48,16 @@
     "tacticalValue": 350
   },
   {
-    "name": "Laser Gun",
-    "type": "Weapons",
-    "imageFileName": "/assets/ship-element-images/LaserGun.png",
-    "notes": ["Takes up 2x1 on grid", "Fires lasers!"],
-    "tacticalValue": 150
-  },
-  {
-    "name": "Gauss Rifle",
-    "type": "Weapons",
-    "notes": [],
-    "tacticalValue": 200
-  },
-  {
     "name": "Guided Missle Launcher (2)",
     "type": "Weapons",
+    "imageFileName": "/assets/ship-element-images/GuidedMissileLauncher.png",
     "notes": ["Only has 2 missiles for the whole match"],
     "tacticalValue": 300
   },
   {
     "name": "Guided Missle Launcher (4)",
     "type": "Weapons",
+    "imageFileName": "/assets/ship-element-images/GuidedMissileLauncher.png",
     "notes": ["Only has 4 missiles for the whole match"],
     "tacticalValue": 450
   },

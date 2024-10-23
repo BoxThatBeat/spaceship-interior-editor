@@ -329,6 +329,9 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
       return shipElementShapes.filter((shape) => shape.shipElementId !== this.rightClickedShipElementId);
     });
 
+    //TODO: fix bug that all ship elements after the one deleted get random rotations if the rotation was changed
+    // THis might have to do with the fact that the shapes are recreated and it stores the rotation not the grid config 
+
     // remove TV of deleted element
     this.totalTV -= deletedElement.shipElement.tacticalValue;
 
