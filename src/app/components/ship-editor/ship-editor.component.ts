@@ -1,5 +1,6 @@
 import {
   AfterViewInit,
+  ChangeDetectionStrategy,
   Component,
   effect,
   input,
@@ -21,14 +22,15 @@ import { Image, ImageConfig } from 'konva/lib/shapes/Image';
 import { ShipElementShape } from '../../models/ship-element-shape';
 import { KoShipElementComponent } from '../ko-ship-element/ko-ship-element.component';
 import { Transformer, TransformerConfig } from 'konva/lib/shapes/Transformer';
+import { ContextMenuComponent } from "../context-menu/context-menu.component";
 
 @Component({
   selector: 'app-ship-editor',
   standalone: true,
-  imports: [StageComponent, CoreShapeComponent, KoShipElementComponent],
+  imports: [StageComponent, CoreShapeComponent, KoShipElementComponent, ContextMenuComponent],
   templateUrl: './ship-editor.component.html',
   styleUrl: './ship-editor.component.scss',
-  //changeDetection: ChangeDetectionStrategy.OnPush, //TODO check if this is causing bugs
+  changeDetection: ChangeDetectionStrategy.OnPush, //TODO check if this is causing bugs
 })
 export class ShipEditorComponent implements OnInit, AfterViewInit {
   stage = viewChild.required(StageComponent);
@@ -38,13 +40,17 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   selector: Signal<CoreShapeComponent> = viewChild.required('selector');
 
   /**
-   * The ship element images that are currently created on the canvas
+   * The ship element images that are currently created on the canvas TODO: is this needed?
    */
   shipElementImages: Signal<readonly CoreShapeComponent[]> = viewChildren('shipElementImage');
 
   gridRectConfigs: WritableSignal<Array<RectConfig>> = signal([]);
   hullRectConfigs: WritableSignal<Array<Array<RectConfig | undefined>>> = signal([]);
   shipElementShapes: WritableSignal<Array<ShipElementShape>> = signal([]);
+
+  contextMenuVisible = signal(false);
+  contextMenuTopPosPx = signal(0);
+  contextMenuLeftPosPx = signal(0);
 
   /**
    * The ShipElement image currently being held by the user (with a mouse drag).
@@ -120,6 +126,7 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   private dragging: boolean = false;
   private selectedShape: Shape | undefined = undefined;
   private selectedElementStartPos: Vector2d | undefined = undefined;
+  private rightClickedShipElementIndex: number = -1;
 
   private currentStagePos: Vector2d = { x:0, y:0 } as Vector2d;
   private currentScale: number = 1.0;
@@ -218,13 +225,13 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     };
 
     // Zoom direction
-    let direction = evt.deltaY > 0 ? 1 : -1;
+    let direction = evt.deltaY > 0 ? -1 : 1;
 
     // when we zoom on trackpad, e.evt.ctrlKey is true
     // In this case, reverse direction of zooming
-    if (evt.ctrlKey) {
-      direction = -direction;
-    }
+    // if (evt.ctrlKey) {
+    //   direction = -direction;
+    // }
 
     const newScale = direction > 0 ? oldScale * this.zoomScaleBy() : oldScale / this.zoomScaleBy();
     const newPos = {
@@ -242,8 +249,51 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     // so if we scale by half, the pixels are half the size essentially.
   }
 
+  onStageContextMenu(ngEventObj: NgKonvaEventObject<PointerEvent>) {
+    if (!ngEventObj.event) {
+      return;
+    }
+    
+    const event = ngEventObj.event;
+    event.evt.preventDefault();
+
+    const stage = this.stage().getStage();
+    const containerRect = stage.container().getBoundingClientRect();
+    const pointerPos = stage.getPointerPosition();
+
+    if (!pointerPos) {
+      return;
+    }
+
+    if (event.target === this.stage().getStage()) {
+      return;
+    }
+
+    // Set the selected ship element in case an action is performed on it
+    console.log(event.target);
+    this.rightClickedShipElementIndex = (event.target as Image).index - 1;
+    console.log(this.rightClickedShipElementIndex);
+
+    this.contextMenuVisible.set(true);
+    this.contextMenuTopPosPx.set(containerRect.top + pointerPos.y + 4);
+    this.contextMenuLeftPosPx.set(containerRect.left + pointerPos.x + 4);
+  }
+
+  onContextMenuDuplicateBtnPressed() {
+    
+    // this.shipElementShapes.update((shipElements) => {
+    //   //Remove element from array at position this.rightClickedShipElementIndex
+
+    // });      
+  }
+
+  onContextMenuDeleteBtnPressed() {
+    console.log('Duplicate pressed');
+  }
+
   onToolStageDragStart(ngEvent: NgKonvaEventObject<MouseEvent>): void {
     this.dragging = true;
+    this.contextMenuVisible.set(false);
 
     if (!ngEvent.event) {
       return;
@@ -326,6 +376,7 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   }
 
   onContainerDragOver(event: any) {
+    // Prevent normal behavior of dragging an image over the container
     event.preventDefault();
   }
 
@@ -365,11 +416,30 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    const gridCoords = this.posToGridCoords(pos);
+    const gridSnappedPos = this.posSnappedToGrid(pos);
+    const gridCoords = this.posToGridCoords(gridSnappedPos);
 
-    if (this.hullRectConfigs()[gridCoords.x][gridCoords.y] === undefined) {
-      this.addRect(pos);
+    if (this.hullRectConfigs()[gridCoords.x][gridCoords.y] !== undefined) {
+      return;
     }
+
+    const newRectConfig = {
+      name: 'rect',
+      x: gridSnappedPos.x,
+      y: gridSnappedPos.y,
+      width: this.gridBlockSize(),
+      height: this.gridBlockSize(),
+      fill: '#CDCDCD',
+      stroke: '#fffff',
+      strokeWidth: 4,
+    } as RectConfig;
+
+    this.hullRectConfigs.update((hullRectConfigs) => {
+      hullRectConfigs[gridCoords.x][gridCoords.y] = newRectConfig;
+      return hullRectConfigs;
+    });
+
+    this.totalTV += 10;
   }
 
   removeRoomAtPos(pos: Vector2d | null): void {
@@ -384,6 +454,8 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
         hullRectConfigs[gridCoords.x][gridCoords.y] = undefined;
         return hullRectConfigs;
       });
+
+      this.totalTV -= 10;
     }
   }
 
@@ -393,31 +465,6 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     this.totalTV = 0;
     (this.selector().getStage() as Transformer).nodes([]);
     this.initHullRectArray();
-  }
-
-  addRect(pos: Vector2d | null): void {
-    if (!pos) {
-      return;
-    }
-
-    const gridSnappedPos = this.posSnappedToGrid(pos);
-    const gridCoords = this.posToGridCoords(gridSnappedPos);
-
-    const newRectConfig = {
-      name: 'rect',
-      x: gridSnappedPos.x,
-      y: gridSnappedPos.y,
-      width: this.gridBlockSize(),
-      height: this.gridBlockSize(),
-      fill: '#CDCDCD',
-      stroke: '#fffff',
-      strokeWidth: 2,
-    } as RectConfig;
-
-    this.hullRectConfigs.update((hullRectConfigs) => {
-      hullRectConfigs[gridCoords.x][gridCoords.y] = newRectConfig;
-      return hullRectConfigs;
-    });
   }
 
   bringToFront(shape: ShipElementShape | Shape): void {

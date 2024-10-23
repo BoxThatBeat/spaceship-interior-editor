@@ -1,5 +1,50 @@
 [
   {
+    "name": "Breach Pod Launcher",
+    "type": "Weapons",
+    "notes": [],
+    "tacticalValue": 100
+  },
+  {
+    "name": "Scatter Missile Launcher 2x",
+    "type": "Weapons",
+    "imageFileName": "/assets/ship-element-images/ScatterMissileLauncher.png",
+    "notes": [],
+    "tacticalValue": 200
+  },
+  {
+    "name": "Scatter Missile Launcher 4x",
+    "type": "Weapons",
+    "imageFileName": "/assets/ship-element-images/ScatterMissileLauncher.png",
+    "notes": [],
+    "tacticalValue": 350
+  },
+  {
+    "name": "Laser Gun",
+    "type": "Weapons",
+    "imageFileName": "/assets/ship-element-images/LaserGun.png",
+    "notes": ["Takes up 2x1 on grid", "Fires lasers!"],
+    "tacticalValue": 150
+  },
+  {
+    "name": "Gauss Rifle",
+    "type": "Weapons",
+    "notes": [],
+    "tacticalValue": 200
+  },
+  {
+    "name": "Guided Missle Launcher (2)",
+    "type": "Weapons",
+    "notes": ["Only has 2 missiles for the whole match"],
+    "tacticalValue": 300
+  },
+  {
+    "name": "Guided Missle Launcher (4)",
+    "type": "Weapons",
+    "notes": ["Only has 4 missiles for the whole match"],
+    "tacticalValue": 450
+  },
+  {
     "name": "Small Thruster",
     "type": "Engines",
     "notes": ["test1", "test2", "test3"],
@@ -56,48 +101,5 @@
     "type": "Shields",
     "notes": [],
     "tacticalValue": 100
-  },
-  {
-    "name": "Breach Pod Launcher",
-    "type": "Weapons",
-    "notes": [],
-    "tacticalValue": 100
-  },
-  {
-    "name": "Scatter Missile Launcher 2x",
-    "type": "Weapons",
-    "notes": [],
-    "tacticalValue": 200
-  },
-  {
-    "name": "Scatter Missile Launcher 4x",
-    "type": "Weapons",
-    "notes": [],
-    "tacticalValue": 350
-  },
-  {
-    "name": "Laser Gun",
-    "type": "Weapons",
-    "imageFileName": "/assets/ship-element-images/LaserGun.png",
-    "notes": ["Takes up 2x1 on grid", "Fires lasers!"],
-    "tacticalValue": 150
-  },
-  {
-    "name": "Gauss Rifle",
-    "type": "Weapons",
-    "notes": [],
-    "tacticalValue": 200
-  },
-  {
-    "name": "Guided Missle Launcher (2)",
-    "type": "Weapons",
-    "notes": ["Only has 2 missiles for the whole match"],
-    "tacticalValue": 300
-  },
-  {
-    "name": "Guided Missle Launcher (4)",
-    "type": "Weapons",
-    "notes": ["Only has 4 missiles for the whole match"],
-    "tacticalValue": 450
   }
 ]

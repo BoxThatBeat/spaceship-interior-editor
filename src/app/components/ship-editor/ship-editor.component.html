@@ -7,6 +7,7 @@
       (mouseup)="onToolStageDragEnd($event)"
       (mousemove)="onToolStageDragMove($event)"
       (wheel)="onStageScroll($event)"
+      (contextmenu)="onStageContextMenu($event)"
     >
       <ko-layer #gridLayer>
         @for (rectConfig of gridRectConfigs(); track $index) {
@@ -38,3 +39,11 @@
     </ko-stage>
   </div>
 </section>
+<app-context-menu 
+  [visible]="contextMenuVisible()"
+  [topPosPx]="contextMenuTopPosPx()"
+  [leftPosPx]="contextMenuLeftPosPx()"
+  (duplicateButtonPressed)="onContextMenuDuplicateBtnPressed()"
+  (deleteButtonPressed)="onContextMenuDeleteBtnPressed()"
+  >
+</app-context-menu>

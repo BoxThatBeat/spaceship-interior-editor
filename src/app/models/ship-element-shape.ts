@@ -9,10 +9,10 @@ export class ShipElementShape extends Shape<ShapeConfig> {
 
   constructor(
     public shipElement: ShipElement,
-    public gridPos: Vector2d,
+    public gridPos: Vector2d, //TODO: probably don't need this
     public config: ShapeConfig
   ) {
     super(config);
-    this.shipElementId = uuidv4();
+    this.shipElementId = uuidv4(); //TODO: might not need this
   }
 }
