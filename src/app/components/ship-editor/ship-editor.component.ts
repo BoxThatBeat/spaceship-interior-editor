@@ -283,18 +283,50 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   }
 
   onContextMenuDuplicateBtnPressed() {
-    console.log('Duplicate pressed');
+    const elementToDuplicate = this.shipElementShapes().find((shape) => shape.shipElementId === this.rightClickedShipElementId);
+    if (!elementToDuplicate) {
+      return;
+    }
+
+    // Make copy of element
+    const elementCopy = { ... elementToDuplicate.shipElement } as ShipElement;
+
+    let pos = this.getScaledPosition(this.stage().getStage().getPointerPosition());
+    if (pos === null) {
+      return;
+    }
+
+    const gridSnappedPos = this.posSnappedToGrid(pos);
+    // Move over by 2 grid block
+    gridSnappedPos.x += this.gridBlockSize() * 2;
+
+    const img = document.createElement('img');
+    const imageUrl = elementCopy.imageUrl;
+    if (!imageUrl) {
+      return;
+    }
+    img.src = imageUrl;
+
+    const shipElementId = uuidv4();
+    let image: ImageConfig = {
+      name: shipElementId,
+      image: img,
+      x: gridSnappedPos.x,
+      y: gridSnappedPos.y,
+    };
+
+    this.addShipElement(shipElementId, elementCopy, image);
   }
 
   onContextMenuDeleteBtnPressed() {
-    const deletedElement = this.shipElementShapes().find((shape) => shape.name() === this.rightClickedShipElementId);
+    const deletedElement = this.shipElementShapes().find((shape) => shape.shipElementId === this.rightClickedShipElementId);
     if (!deletedElement) {
       return;
     }
-    
+
     // Delete ship element with rightClickedShipElementId
     this.shipElementShapes.update((shipElementShapes) => {
-      return shipElementShapes.filter((shape) => shape.name() !== this.rightClickedShipElementId);
+      return shipElementShapes.filter((shape) => shape.shipElementId !== this.rightClickedShipElementId);
     });
 
     // remove TV of deleted element
@@ -323,21 +355,20 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
         this.removeRoomAtPos(this.getScaledPosition(this.stage().getStage().getPointerPosition()));
         break;
       case EditorTool.NONE:
-        if (ngEvent.event.target !== this.stage().getStage()) {
+        if (ngEvent.event.target === this.stage().getStage()) {
+          (this.selector().getStage() as Transformer).nodes([]);
+        } else {
           const shape = ngEvent.event.target as Shape;
 
           if (shape) {
             if (shape instanceof Image) {
-              this.bringToFront(shape);
+              shape.moveToTop();
               (this.selector().getStage() as Transformer).nodes([shape]);
   
               this.selectedElementStartPos = { x: shape.x(), y: shape.y() } as Vector2d;
               this.selectedShape = shape;
             }
           }
-        } else if (ngEvent.event.target === this.stage().getStage()) {
-          // Deselect elements if click on empty space
-          (this.selector().getStage() as Transformer).nodes([]);
         }
         break;
     }
@@ -408,25 +439,28 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     }
 
     const heldShipElement = this.currentlyHeldShipElement();
-    if (heldShipElement) {
-      const gridSnappedPos = this.posSnappedToGrid(pos);
-
-      const img = document.createElement('img');
-      const imageUrl = heldShipElement.imageUrl;
-      if (imageUrl !== undefined) {
-        img.src = imageUrl;
-      }
-
-      const shipElementId = uuidv4();
-      let image: ImageConfig = {
-        name: shipElementId,
-        image: img,
-        x: gridSnappedPos.x,
-        y: gridSnappedPos.y,
-      };
-  
-      this.addShipElement(shipElementId, heldShipElement, image);
+    if (!heldShipElement) {
+      return;
     }
+
+    const gridSnappedPos = this.posSnappedToGrid(pos);
+
+    const img = document.createElement('img');
+    const imageUrl = heldShipElement.imageUrl;
+    if (!imageUrl) {
+      return;
+    }
+    img.src = imageUrl;
+
+    const shipElementId = uuidv4();
+    let image: ImageConfig = {
+      name: shipElementId,
+      image: img,
+      x: gridSnappedPos.x,
+      y: gridSnappedPos.y,
+    };
+
+    this.addShipElement(shipElementId, heldShipElement, image);
   }
 
   addRoomAtPos(pos: Vector2d | null): void {
@@ -482,11 +516,6 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     this.totalTV = 0;
     (this.selector().getStage() as Transformer).nodes([]);
     this.initHullRectArray();
-  }
-
-  bringToFront(shape: ShipElementShape | Shape): void {
-    shape.show();
-    shape.moveToTop();
   }
 
   snapToGrid(shape: Shape): void {
