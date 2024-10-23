@@ -1,6 +1,6 @@
 <div class="menu" [style.top]="topPosPx() + 'px'" [style.left]="leftPosPx() + 'px'" [style.display]="visible() ? 'initial' : 'none'">
   <div>
-    <button class="duplicate-button">Duplicate</button>
-    <button class="delete-button">Delete</button>
+    <button class="duplicate-button" (click)="onDuplicateButtonPressed()">Duplicate</button>
+    <button class="delete-button" (click)="onDeleteButtonPressed()">Delete</button>
   </div>
 </div>

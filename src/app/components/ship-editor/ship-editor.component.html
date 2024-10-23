@@ -27,13 +27,8 @@
       <ko-layer #shipElementsLayer>
         <ko-transformer #selector [config]="transformConfig"></ko-transformer>
         @for (shipElementShape of shipElementShapes(); track $index) {
-          @if (shipElementShape.config.name === 'rect') {
-            <ko-rect [config]="shipElementShape.config"></ko-rect>
-          }
-          @if (shipElementShape.config.name === 'image') {
-            <ko-image #shipElementImage [config]="shipElementShape.config"></ko-image>
+          <ko-image #shipElementImage [config]="shipElementShape.config"></ko-image>
             <!-- <ko-ship-element [config]="shipElementShape.config" [shipElementShape]="shipElementShape"></ko-ship-element> -->
-          }
         }
       </ko-layer>
     </ko-stage>

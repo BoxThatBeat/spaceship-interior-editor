@@ -17,4 +17,11 @@ export class ContextMenuComponent {
 
   duplicateButtonPressed = output<void>();
   deleteButtonPressed = output<void>();
+
+  onDuplicateButtonPressed() {
+    this.duplicateButtonPressed.emit();
+  }
+  onDeleteButtonPressed() {
+    this.deleteButtonPressed.emit();
+  }
 }

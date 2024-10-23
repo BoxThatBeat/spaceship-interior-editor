@@ -13,7 +13,7 @@ import {
 } from '@angular/core';
 import { CoreShapeComponent, NgKonvaEventObject, StageComponent } from 'ng2-konva';
 import { StageConfig } from 'konva/lib/Stage';
-import { RectConfig } from 'konva/lib/shapes/Rect';
+import { Rect, RectConfig } from 'konva/lib/shapes/Rect';
 import { Shape } from 'konva/lib/Shape';
 import { EditorTool } from '../../models/editor-tool.enum';
 import { Vector2d } from 'konva/lib/types';
@@ -23,6 +23,7 @@ import { ShipElementShape } from '../../models/ship-element-shape';
 import { KoShipElementComponent } from '../ko-ship-element/ko-ship-element.component';
 import { Transformer, TransformerConfig } from 'konva/lib/shapes/Transformer';
 import { ContextMenuComponent } from "../context-menu/context-menu.component";
+import { v4 as uuidv4 } from 'uuid';
 
 @Component({
   selector: 'app-ship-editor',
@@ -126,7 +127,7 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   private dragging: boolean = false;
   private selectedShape: Shape | undefined = undefined;
   private selectedElementStartPos: Vector2d | undefined = undefined;
-  private rightClickedShipElementIndex: number = -1;
+  private rightClickedShipElementId: string = '';
 
   private currentStagePos: Vector2d = { x:0, y:0 } as Vector2d;
   private currentScale: number = 1.0;
@@ -258,8 +259,8 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     event.evt.preventDefault();
 
     const stage = this.stage().getStage();
-    const containerRect = stage.container().getBoundingClientRect();
     const pointerPos = stage.getPointerPosition();
+    const containerRect = stage.container().getBoundingClientRect();
 
     if (!pointerPos) {
       return;
@@ -269,10 +270,12 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
       return;
     }
 
+    if (event.target instanceof Rect) {
+      return;
+    }
+
     // Set the selected ship element in case an action is performed on it
-    console.log(event.target);
-    this.rightClickedShipElementIndex = (event.target as Image).index - 1;
-    console.log(this.rightClickedShipElementIndex);
+    this.rightClickedShipElementId = (event.target as Shape).name();
 
     this.contextMenuVisible.set(true);
     this.contextMenuTopPosPx.set(containerRect.top + pointerPos.y + 4);
@@ -280,15 +283,28 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   }
 
   onContextMenuDuplicateBtnPressed() {
-    
-    // this.shipElementShapes.update((shipElements) => {
-    //   //Remove element from array at position this.rightClickedShipElementIndex
-
-    // });      
+    console.log('Duplicate pressed');
   }
 
   onContextMenuDeleteBtnPressed() {
-    console.log('Duplicate pressed');
+    const deletedElement = this.shipElementShapes().find((shape) => shape.name() === this.rightClickedShipElementId);
+    if (!deletedElement) {
+      return;
+    }
+    
+    // Delete ship element with rightClickedShipElementId
+    this.shipElementShapes.update((shipElementShapes) => {
+      return shipElementShapes.filter((shape) => shape.name() !== this.rightClickedShipElementId);
+    });
+
+    // remove TV of deleted element
+    this.totalTV -= deletedElement.shipElement.tacticalValue;
+
+    // Deselect element
+    (this.selector().getStage() as Transformer).nodes([]);
+
+    // Close menu
+    this.contextMenuVisible.set(false);
   }
 
   onToolStageDragStart(ngEvent: NgKonvaEventObject<MouseEvent>): void {
@@ -400,14 +416,16 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
       if (imageUrl !== undefined) {
         img.src = imageUrl;
       }
+
+      const shipElementId = uuidv4();
       let image: ImageConfig = {
-        name: 'image',
+        name: shipElementId,
         image: img,
         x: gridSnappedPos.x,
         y: gridSnappedPos.y,
       };
   
-      this.addShipElement(heldShipElement, image);
+      this.addShipElement(shipElementId, heldShipElement, image);
     }
   }
 
@@ -424,7 +442,6 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     }
 
     const newRectConfig = {
-      name: 'rect',
       x: gridSnappedPos.x,
       y: gridSnappedPos.y,
       width: this.gridBlockSize(),
@@ -499,14 +516,14 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     return { x: (pos.x - this.currentStagePos.x) / this.currentScale, y: (pos.y - this.currentStagePos.y) / this.currentScale } as Vector2d;;
   }
 
-  addShipElement(shipElement: ShipElement, imageConfig: ImageConfig ): void {
+  addShipElement(id: string, shipElement: ShipElement, imageConfig: ImageConfig ): void {
     if (!imageConfig.x || !imageConfig.y) {
       console.log('error: imageConfig missing x or y');
       return;
     }
 
     const gridCoords = this.posToGridCoords({x: imageConfig.x, y: imageConfig.y});
-    const newShipElementShape = new ShipElementShape(shipElement, gridCoords, imageConfig);
+    const newShipElementShape = new ShipElementShape(id, shipElement, gridCoords, imageConfig);
 
     this.shipElementShapes.update((shipElementShapes) => {
       shipElementShapes.push(newShipElementShape);
