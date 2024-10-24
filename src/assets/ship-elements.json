@@ -103,7 +103,7 @@
     "name": "Shield Generator 5v",
     "type": "Shields",
     "notes": [],
-    "imageFileName": "/assets/ship-element-images/GatlingGun.png",
+    "imageFileName": "/assets/ship-element-images/TempShieldGen.png",
     "tacticalValue": 200,
     "capacitors": 2
   },

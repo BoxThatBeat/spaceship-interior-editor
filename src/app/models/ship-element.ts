@@ -18,17 +18,17 @@ interface ShipElementBase {
   imageUrl?: string;
 }
 
-export interface ShipWeapon extends ShipElementBase {
+interface ShipWeapon extends ShipElementBase {
   damage: number;
   accuracy: number;
   range?: Range;
 }
 
-export interface ShipEngine extends ShipElementBase {
+interface ShipEngine extends ShipElementBase {
   speed: Range;
 }
 
-export interface ShipShieldGenerator extends ShipElementBase {
+interface ShipShieldGenerator extends ShipElementBase {
   capacitors: number;
 }
 

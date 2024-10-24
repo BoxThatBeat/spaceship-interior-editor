@@ -36,11 +36,10 @@ export class AppComponent {
   public gridHeight: number = 15;
   public initialStageScale: number = 0.25;
   public zoomScaleBy: number = 1.05;
-  public shipElements: ShipElement[] = shipElementsJson as ShipElement[]; //TODO: maybe need to do ShipElement | ShipWeapon [] here
+  public shipElements: ShipElement[] = shipElementsJson as ShipElement[];
 
   public onToolChange(tool: EditorTool): void {
     this.currentTool = tool;
-    console.log('shipElements', this.shipElements);
   }
 
   public onGridToggleChange(value: boolean): void {

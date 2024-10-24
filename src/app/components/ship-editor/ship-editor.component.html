@@ -32,12 +32,18 @@
         }
       </ko-layer>
       <ko-layer #armamentLayer>
-        <ko-group [config]="armamentDetails().armamentGroupConfig">
-          @for (armamentRectConfig of armamentDetails().armamentGroupRectConfigs; track $index) {
+        <ko-group [config]="armamentGroupConfig">
+          @for (armamentRectConfig of armamentDetailsService.staticGroupRectConfigs; track $index) {
             <ko-rect [config]="armamentRectConfig"></ko-rect>
           }
-          @for (armamentStaticTextConfig of armamentDetails().armamentGroupStaticTextConfigs; track $index) {
+          @for (armamentStaticTextConfig of armamentDetailsService.staticTextConfigs; track $index) {
             <ko-text [config]="armamentStaticTextConfig"></ko-text>
+          }
+
+          @for (weaponTexts of armamentDetailsService.weaponDetailsList(); track $index) {
+            @for (weaponTextConfig of weaponTexts; track $index) {
+              <ko-text [config]="weaponTextConfig"></ko-text>
+            }
           }
         </ko-group>
       </ko-layer>

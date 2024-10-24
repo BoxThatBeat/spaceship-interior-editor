@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   effect,
+  inject,
   input,
   OnInit,
   signal,
@@ -17,13 +18,14 @@ import { Rect, RectConfig } from 'konva/lib/shapes/Rect';
 import { Shape } from 'konva/lib/Shape';
 import { EditorTool } from '../../models/editor-tool.enum';
 import { Vector2d } from 'konva/lib/types';
-import { ShipElement, ShipWeapon, ShipEngine, ShipShieldGenerator, isShipWeapon, isShipEngine, isShipShieldGenerator } from '../../models/ship-element';
+import { ShipElement, isShipWeapon, isShipEngine, isShipShieldGenerator } from '../../models/ship-element';
 import { Image, ImageConfig } from 'konva/lib/shapes/Image';
 import { ShipElementShape } from '../../models/ship-element-shape';
 import { Transformer, TransformerConfig } from 'konva/lib/shapes/Transformer';
 import { ContextMenuComponent } from "../context-menu/context-menu.component";
 import { v4 as uuidv4 } from 'uuid';
-import ArmamentDetails from '../../models/armament-details';
+import ArmamentDetailsService from '../../services/armament-details.service';
+import { GroupConfig } from 'konva/lib/Group';
 
 @Component({
   selector: 'app-ship-editor',
@@ -52,8 +54,6 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   contextMenuVisible = signal(false);
   contextMenuTopPosPx = signal(0);
   contextMenuLeftPosPx = signal(0);
-
-  armamentDetails = signal(new ArmamentDetails());
 
   /**
    * The ShipElement image currently being held by the user (with a mouse drag).
@@ -125,6 +125,11 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     rotationSnapTolerance: 45,
     rotateAnchorOffset: 50,
   };
+  public readonly armamentGroupConfig: Partial<GroupConfig> = {
+    x: 0,
+    y: 0,
+    draggable: true,
+  } as GroupConfig
 
   private dragging: boolean = false;
   private selectedShape: Shape | undefined = undefined;
@@ -133,6 +138,9 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
 
   private currentStagePos: Vector2d = { x:0, y:0 } as Vector2d;
   private currentScale: number = 1.0;
+
+  // SERVICES
+  public armamentDetailsService = inject(ArmamentDetailsService);
 
   constructor() {
     effect(() => {
@@ -321,9 +329,17 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   }
 
   onContextMenuDeleteBtnPressed() {
-    const deletedElement = this.shipElementShapes().find((shape) => shape.shipElementId === this.rightClickedShipElementId);
-    if (!deletedElement) {
+    const shipElementToDelete = this.shipElementShapes().find((shape) => shape.shipElementId === this.rightClickedShipElementId)?.shipElement;
+    if (!shipElementToDelete) {
       return;
+    }
+
+    if (isShipWeapon(shipElementToDelete)) {
+      this.armamentDetailsService.removeWeapon(shipElementToDelete.name);
+    } else if (isShipEngine(shipElementToDelete)) {
+      console.log('deleting engine');
+    } else if (isShipShieldGenerator(shipElementToDelete)) {
+      console.log('deleting shield generator');
     }
 
     // Delete ship element with rightClickedShipElementId
@@ -335,7 +351,7 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     // THis might have to do with the fact that the shapes are recreated and it stores the rotation not the grid config 
 
     // remove TV of deleted element
-    this.totalTV -= deletedElement.shipElement.tacticalValue;
+    this.totalTV -= shipElementToDelete.tacticalValue;
 
     // Deselect element
     (this.selector().getStage() as Transformer).nodes([]);
@@ -557,7 +573,7 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     }
 
     if (isShipWeapon(shipElement)) {
-      console.log('adding weapon');
+      this.armamentDetailsService.addWeapon(shipElement.name, shipElement.damage, shipElement.accuracy);
     } else if (isShipEngine(shipElement)) {
       console.log('adding engine');
     } else if (isShipShieldGenerator(shipElement)) {
