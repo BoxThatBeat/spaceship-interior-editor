@@ -31,6 +31,16 @@
           <!-- <ko-ship-element [config]="shipElementShape.config" [shipElementShape]="shipElementShape"></ko-ship-element> -->
         }
       </ko-layer>
+      <ko-layer #armamentLayer>
+        <ko-group [config]="armamentDetails().armamentGroupConfig">
+          @for (armamentRectConfig of armamentDetails().armamentGroupRectConfigs; track $index) {
+            <ko-rect [config]="armamentRectConfig"></ko-rect>
+          }
+          @for (armamentStaticTextConfig of armamentDetails().armamentGroupStaticTextConfigs; track $index) {
+            <ko-text [config]="armamentStaticTextConfig"></ko-text>
+          }
+        </ko-group>
+      </ko-layer>
     </ko-stage>
   </div>
 </section>

@@ -17,18 +17,18 @@ import { Rect, RectConfig } from 'konva/lib/shapes/Rect';
 import { Shape } from 'konva/lib/Shape';
 import { EditorTool } from '../../models/editor-tool.enum';
 import { Vector2d } from 'konva/lib/types';
-import { ShipElement } from '../../models/ship-element';
+import { ShipElement, ShipWeapon, ShipEngine, ShipShieldGenerator, isShipWeapon, isShipEngine, isShipShieldGenerator } from '../../models/ship-element';
 import { Image, ImageConfig } from 'konva/lib/shapes/Image';
 import { ShipElementShape } from '../../models/ship-element-shape';
-import { KoShipElementComponent } from '../ko-ship-element/ko-ship-element.component';
 import { Transformer, TransformerConfig } from 'konva/lib/shapes/Transformer';
 import { ContextMenuComponent } from "../context-menu/context-menu.component";
 import { v4 as uuidv4 } from 'uuid';
+import ArmamentDetails from '../../models/armament-details';
 
 @Component({
   selector: 'app-ship-editor',
   standalone: true,
-  imports: [StageComponent, CoreShapeComponent, KoShipElementComponent, ContextMenuComponent],
+  imports: [StageComponent, CoreShapeComponent, ContextMenuComponent],
   templateUrl: './ship-editor.component.html',
   styleUrl: './ship-editor.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush, //TODO check if this is causing bugs
@@ -52,6 +52,8 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   contextMenuVisible = signal(false);
   contextMenuTopPosPx = signal(0);
   contextMenuLeftPosPx = signal(0);
+
+  armamentDetails = signal(new ArmamentDetails());
 
   /**
    * The ShipElement image currently being held by the user (with a mouse drag).
@@ -552,6 +554,14 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     if (!imageConfig.x || !imageConfig.y) {
       console.log('error: imageConfig missing x or y');
       return;
+    }
+
+    if (isShipWeapon(shipElement)) {
+      console.log('adding weapon');
+    } else if (isShipEngine(shipElement)) {
+      console.log('adding engine');
+    } else if (isShipShieldGenerator(shipElement)) {
+      console.log('adding shield generator');
     }
 
     const gridCoords = this.posToGridCoords({x: imageConfig.x, y: imageConfig.y});

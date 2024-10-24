@@ -9,62 +9,60 @@
     "name": "Gatling Gun",
     "type": "Weapons",
     "imageFileName": "/assets/ship-element-images/GatlingGun.png",
-    "notes": ["Takes up 2x1 on grid"],
-    "tacticalValue": 100
+    "notes": ["Penetrates shields", "Kills crew one hull deep, does not destroy hull"],
+    "tacticalValue": 100,
+    "damage": 0,
+    "accuracy": 4
   },
   {
     "name": "Laser Gun",
     "type": "Weapons",
     "imageFileName": "/assets/ship-element-images/LaserGun.png",
-    "notes": ["Takes up 2x1 on grid", "Blocked by shields"],
-    "tacticalValue": 150
+    "notes": ["1 damage to shields", "Destroys one hull deep"],
+    "tacticalValue": 150,
+    "damage": 1,
+    "accuracy": 2
   },
   {
     "name": "Double Laser Gun",
     "type": "Weapons",
     "imageFileName": "/assets/ship-element-images/DoubleLaserGun.png",
-    "notes": ["Takes up 2x1 on grid", "Blocked by shields"],
-    "tacticalValue": 250
+    "notes": ["2 damage to shields", "Each laser destroys one hull deep"],
+    "tacticalValue": 250,
+    "damage": 2,
+    "accuracy": 2
   },
   {
     "name": "Gauss Rifle",
     "type": "Weapons",
     "imageFileName": "/assets/ship-element-images/GaussRifle.png",
-    "notes": ["Penetrates shields"],
-    "tacticalValue": 200
+    "notes": ["Penetrates shields", "Destroys two hulls deep"],
+    "tacticalValue": 200,
+    "damage": 0,
+    "accuracy": 1
   },
   {
-    "name": "Scatter Missile Launcher 2x",
+    "name": "Scatter Missile Launcher",
     "type": "Weapons",
     "imageFileName": "/assets/ship-element-images/ScatterMissileLauncher.png",
-    "notes": [],
-    "tacticalValue": 200
+    "notes": ["Fires 3 missiles at once", "Missiles destroy one hull each"],
+    "tacticalValue": 200,
+    "damage": 1,
+    "accuracy": 3
   },
   {
-    "name": "Scatter Missile Launcher 4x",
-    "type": "Weapons",
-    "imageFileName": "/assets/ship-element-images/ScatterMissileLauncher.png",
-    "notes": [],
-    "tacticalValue": 350
-  },
-  {
-    "name": "Guided Missle Launcher (2)",
+    "name": "Guided Missle Launcher",
     "type": "Weapons",
     "imageFileName": "/assets/ship-element-images/GuidedMissileLauncher.png",
-    "notes": ["Only has 2 missiles for the whole match"],
-    "tacticalValue": 300
-  },
-  {
-    "name": "Guided Missle Launcher (4)",
-    "type": "Weapons",
-    "imageFileName": "/assets/ship-element-images/GuidedMissileLauncher.png",
-    "notes": ["Only has 4 missiles for the whole match"],
-    "tacticalValue": 450
+    "notes": ["Only has 2 missiles for the whole match", "Destroys all hulls surrounding impact hull (including diagonals)"],
+    "tacticalValue": 300,
+    "damage": 1,
+    "accuracy": 1
   },
   {
     "name": "Small Thruster",
     "type": "Engines",
-    "notes": ["test1", "test2", "test3"],
+    "notes": [],
     "tacticalValue": 50
   },
   {
@@ -102,21 +100,31 @@
     "tacticalValue": 500
   },
   {
-    "name": "Shield Generator",
+    "name": "Shield Generator 5v",
     "type": "Shields",
     "notes": [],
-    "tacticalValue": 250
+    "imageFileName": "/assets/ship-element-images/GatlingGun.png",
+    "tacticalValue": 200,
+    "capacitors": 2
+  },
+  {
+    "name": "Shield Generator 10v",
+    "type": "Shields",
+    "notes": [],
+    "tacticalValue": 400,
+    "capacitors": 4
+  },
+  {
+    "name": "Shield Generator 15v",
+    "type": "Shields",
+    "notes": [],
+    "tacticalValue": 500,
+    "capacitors": 6
   },
   {
     "name": "Large Shield Generator",
     "type": "Shields",
     "notes": [],
     "tacticalValue": 400
-  },
-  {
-    "name": "Shield Capacitor",
-    "type": "Shields",
-    "notes": [],
-    "tacticalValue": 100
   }
 ]

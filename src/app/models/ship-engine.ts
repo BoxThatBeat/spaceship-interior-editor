@@ -1,15 +1,13 @@
-import { Range } from './range.enum';
-import { ShipElement } from './ship-element';
+import { Range } from "./range.enum";
+import { ShipElement } from "./ship-element";
 
-// export class ShipWeapon extends ShipElement {
+// export class ShipEngine extends ShipElement {
 //   constructor(
 //     name: string,
 //     type: string,
 //     tacticalValue: number,
 
-//     public damage: number,
-//     public accuracy: number, //base to-hit number
-//     public range?: Range,
+//     public speed: Range,
 
 //     notes?: string[],
 //     imageFileName?: string,
