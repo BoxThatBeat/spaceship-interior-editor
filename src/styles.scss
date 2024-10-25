@@ -266,3 +266,8 @@ $altTheme: (
     font-family: 'Roboto';
   }
 }
+
+body {
+  overflow: hidden; /* Hide scrollbars */
+  background-color: #4f4f4f
+}

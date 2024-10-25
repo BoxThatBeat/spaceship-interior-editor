@@ -34,7 +34,7 @@ export class AppComponent {
   public gridBlockSize: number = 300; // 300px per block gives enough detail for images in a square
   public gridWidth: number = 30;
   public gridHeight: number = 15;
-  public initialStageScale: number = 0.25;
+  public initialStageScale: number = 0.15;
   public zoomScaleBy: number = 1.05;
   public shipElements: ShipElement[] = shipElementsJson as ShipElement[];
 

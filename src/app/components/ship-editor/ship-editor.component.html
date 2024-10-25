@@ -1,9 +1,9 @@
 <div class="header">
   <input type="text" [(ngModel)]="shipTitle" (keyup)="onShipTitleChanged()" maxlength="24" placeholder="Ship Title" />
-  <h1>Budget: {{ totalCost() }} / 2000</h1>
+  <h1 class="budget-text">Budget: {{ totalCost() }} / 2000</h1>
 </div>
-<section>
-  <div (drop)="onImageDropped($event)" (dragover)="onContainerDragOver($event)">
+<section class="editor">
+  <div #editorContainer (drop)="onImageDropped($event)" (dragover)="onContainerDragOver($event)">
     <ko-stage
       [config]="configStage"
       (mousedown)="onToolStageDragStart($event)"
