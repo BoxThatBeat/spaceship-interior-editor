@@ -15,7 +15,7 @@ export default class ArmamentDetailsService {
   public readonly staticGroupRectConfigs: Array<RectConfig> = [
     {
       x: 0,
-      y: 0,
+      y: 100,
       width: 500,
       height: 400,
       fill: 'white',
@@ -24,7 +24,7 @@ export default class ArmamentDetailsService {
     } as RectConfig,
     {
       x: 500,
-      y: 0,
+      y: 100,
       width: 150,
       height: 400,
       fill: 'white',
@@ -33,7 +33,7 @@ export default class ArmamentDetailsService {
     } as RectConfig,
     {
       x: 650,
-      y: 0,
+      y: 100,
       width: 150,
       height: 400,
       fill: 'white',
@@ -42,7 +42,7 @@ export default class ArmamentDetailsService {
     } as RectConfig,
     {
       x: 0,
-      y: 400,
+      y: 500,
       width: 800,
       height: 200,
       fill: 'white',
@@ -54,7 +54,7 @@ export default class ArmamentDetailsService {
   public readonly staticTextConfigs: Array<TextConfig> = [
     {
       x: 0 + textPadding,
-      y: textPadding,
+      y: 100 + textPadding,
       text: 'WEAPON',
       fontSize: 50,
       fontFamily: fontFamily,
@@ -63,7 +63,7 @@ export default class ArmamentDetailsService {
     } as TextConfig,
     {
       x: 500 + textPadding,
-      y: textPadding,
+      y: 100 + textPadding,
       text: 'DMG',
       fontSize: 50,
       fontFamily: fontFamily,
@@ -72,7 +72,7 @@ export default class ArmamentDetailsService {
     } as TextConfig,
     {
       x: 650 + textPadding,
-      y: textPadding,
+      y: 100 + textPadding,
       text: 'ACC',
       fontSize: 50,
       fontFamily: fontFamily,
@@ -85,21 +85,26 @@ export default class ArmamentDetailsService {
   private weaponCounts: Map<string, number> = new Map<string, number>();
 
   public weaponDetailsList: WritableSignal<Array<Array<TextConfig>>> = signal([]);
+  public shipTitleTextConfig: WritableSignal<TextConfig> = signal({
+    x: 0,
+    y: 0,
+    text: 'Ship Title',
+    fontSize: 100,
+    fontFamily: fontFamily,
+    fontStyle: 'bold',
+    fill: fontColor,
+  } as TextConfig );
 
   public addWeapon(name: string, damage: number, accuracy: number): void {
     // Only adds text if this is the first time the specific weapon name is added
-
-    //TODO: instead, any time a weapon is added or removed, loop over them all and rebuild the list of configs. to prevent holes in the visual list
     const weaponCount = this.weaponCounts.get(name);
-    if (weaponCount || weaponCount === 0) {
-      this.weaponCounts.set(name, weaponCount + 1);
-    } else {
+    if (!weaponCount || (weaponCount && weaponCount === 0)) {
       this.weaponCounts.set(name, 1);
 
       let weaponDetails: Array<TextConfig> = [];
       weaponDetails.push({
         x: 0 + textPadding,
-        y: 75 + this.currentNumWeapons * distanceBetweenWeaponText,
+        y: 175 + this.currentNumWeapons * distanceBetweenWeaponText,
         text: name,
         fontSize: 40,
         fontFamily: fontFamily,
@@ -108,7 +113,7 @@ export default class ArmamentDetailsService {
 
       weaponDetails.push({
         x: 500 + textPadding + 10,
-        y: 75 + this.currentNumWeapons * distanceBetweenWeaponText,
+        y: 175 + this.currentNumWeapons * distanceBetweenWeaponText,
         text: damage.toString(),
         fontSize: 40,
         fontFamily: fontFamily,
@@ -117,7 +122,7 @@ export default class ArmamentDetailsService {
 
       weaponDetails.push({
         x: 650 + textPadding + 10,
-        y: 75 + this.currentNumWeapons * distanceBetweenWeaponText,
+        y: 175 + this.currentNumWeapons * distanceBetweenWeaponText,
         text: accuracy.toString(),
         fontSize: 40,
         fontFamily: fontFamily,
@@ -131,23 +136,40 @@ export default class ArmamentDetailsService {
 
       this.currentNumWeapons++;
       // dynamically update the height of the armamentGroupRectConfigs[0]
+    } else {
+      this.weaponCounts.set(name, weaponCount + 1);
     }
   }
 
   removeWeapon(name: string): void {
     // Only remove the weapon text if there are 0 instances of the weapon left
     const weaponCount = this.weaponCounts.get(name);
-    if (weaponCount && weaponCount === 1) {
-      this.weaponCounts.set(name, weaponCount - 1);
+    if (!weaponCount) {
+      return;
+    }
+    
+    if (weaponCount === 1) {
       let index = this.weaponDetailsList().findIndex((weaponDetails) => weaponDetails[0].text === name);
       
       this.weaponDetailsList.update((weaponDetailsList) => {
-        weaponDetailsList.splice(index, 1);
-        return weaponDetailsList;
+        let weaponDetailsCopy = [...weaponDetailsList];
+        weaponDetailsCopy.splice(index, 1);
+
+        // loop over all the weaponDetails and set the y values again
+        for (let i = 0; i < weaponDetailsCopy.length; i++) {
+          weaponDetailsCopy[i][0].y = 175 + i * distanceBetweenWeaponText;
+          weaponDetailsCopy[i][1].y = 175 + i * distanceBetweenWeaponText;
+          weaponDetailsCopy[i][2].y = 175 + i * distanceBetweenWeaponText;
+        }
+        return weaponDetailsCopy;
       });
+
       this.currentNumWeapons--;
+
       // dynamically update the height of the armamentGroupRectConfigs[0]
     }
+
+    this.weaponCounts.set(name, weaponCount - 1);
   }
 
   addEngine(name: string, range: Range): void {
@@ -163,9 +185,11 @@ export default class ArmamentDetailsService {
   }
 
   updateShipTitle(title: string): void {
-
+    this.shipTitleTextConfig.update((shipTitleTextConfig) => {
+      let titleCopy = { ...shipTitleTextConfig } as TextConfig;
+      titleCopy.text = title;
+      return titleCopy;
+    });
   }
-
-  
 
 }

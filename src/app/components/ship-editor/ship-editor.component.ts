@@ -5,6 +5,7 @@ import {
   effect,
   inject,
   input,
+  NgModule,
   OnInit,
   signal,
   Signal,
@@ -26,11 +27,12 @@ import { ContextMenuComponent } from "../context-menu/context-menu.component";
 import { v4 as uuidv4 } from 'uuid';
 import ArmamentDetailsService from '../../services/armament-details.service';
 import { GroupConfig } from 'konva/lib/Group';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-ship-editor',
   standalone: true,
-  imports: [StageComponent, CoreShapeComponent, ContextMenuComponent],
+  imports: [StageComponent, CoreShapeComponent, ContextMenuComponent, FormsModule],
   templateUrl: './ship-editor.component.html',
   styleUrl: './ship-editor.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush, //TODO check if this is causing bugs
@@ -108,14 +110,15 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   /**
    * Computed total tactical value of all ship elements on the canvas.
    */
-  // totalTV: Signal<number> = computed(() => {
+  // totalCost: Signal<number> = computed(() => {
   //   let total = 0;
   //   this.shipElementShapes().forEach((shape: ShipElementShape) => {
   //     total += shape.shipElement.tacticalValue;
   //   });
   //   return total;
   // });
-  public totalTV: number = 0;
+  public totalCost = signal(0);
+  public shipTitle = signal('');
 
   public configStage: Partial<StageConfig> = {};
   public transformConfig: TransformerConfig = {
@@ -126,18 +129,16 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     rotateAnchorOffset: 50,
   };
   public readonly armamentGroupConfig: GroupConfig = {
-    x: 0,
-    y: 0,
+    x: 100,
+    y: 100,
     draggable: true,
   } as GroupConfig
 
   private dragging: boolean = false;
+  private middleMouseHeld: boolean = false;
   private selectedShape: Shape | undefined = undefined;
   private selectedElementStartPos: Vector2d | undefined = undefined;
   private rightClickedShipElementId: string = '';
-
-  private currentStagePos: Vector2d = { x:0, y:0 } as Vector2d;
-  private currentScale: number = 1.0;
 
   // SERVICES
   public armamentDetailsService = inject(ArmamentDetailsService);
@@ -167,7 +168,6 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   ngAfterViewInit(): void {
     //Apply initial zoom level
     this.stage().getStage().scale({ x: this.initialStageScale(), y: this.initialStageScale() });
-    this.currentScale = this.initialStageScale();
   }
 
   /**
@@ -252,12 +252,6 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
 
     stage.scale({ x: newScale, y: newScale });
     stage.position(newPos);
-
-    this.currentScale = newScale;
-    this.currentStagePos = newPos;
-
-    //NOTE: block size does not need to be scaled as the whole stage is acting as a different size,
-    // so if we scale by half, the pixels are half the size essentially.
   }
 
   onStageContextMenu(ngEventObj: NgKonvaEventObject<PointerEvent>) {
@@ -350,8 +344,8 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     //TODO: fix bug that all ship elements after the one deleted get random rotations if the rotation was changed
     // THis might have to do with the fact that the shapes are recreated and it stores the rotation not the grid config 
 
-    // remove TV of deleted element
-    this.totalTV -= shipElementToDelete.tacticalValue;
+    // remove cost of deleted element
+    this.totalCost.update((totalCost) => totalCost - shipElementToDelete.tacticalValue);
 
     // Deselect element
     (this.selector().getStage() as Transformer).nodes([]);
@@ -365,6 +359,15 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     this.contextMenuVisible.set(false);
 
     if (!ngEvent.event) {
+      return;
+    }
+
+    // prevent default behavior
+    ngEvent.event.evt.preventDefault();
+
+    // if the user is dragging the stage with the middle mouse button
+    if (ngEvent.event.evt.button === 1) {
+      this.middleMouseHeld = true;
       return;
     }
 
@@ -400,7 +403,24 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
       return;
     }
 
+    // prevent default behavior
+    ngEvent.event.evt.preventDefault();
+
     if (this.dragging) {
+
+      const stage = this.stage().getStage();
+      if (this.middleMouseHeld) {
+
+        // set the position of the stage based on the mouse position
+        const pos = stage.position();
+        const newPos = {
+          x: pos.x + ngEvent.event.evt.movementX,
+          y: pos.y + ngEvent.event.evt.movementY,
+        };
+        stage.position(newPos);
+        return;
+      }
+
       switch (this.selectedTool()) {
         case EditorTool.BRUSH:
           this.addRoomAtPos(this.getScaledPosition(this.stage().getStage().getPointerPosition()));
@@ -411,8 +431,8 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
         case EditorTool.NONE:
           if (this.selectedShape) {
             this.selectedShape.position({
-              x: this.selectedShape.x() + ngEvent.event.evt.movementX / this.currentScale,
-              y: this.selectedShape.y() + ngEvent.event.evt.movementY / this.currentScale,
+              x: this.selectedShape.x() + ngEvent.event.evt.movementX / stage.scaleX(),
+              y: this.selectedShape.y() + ngEvent.event.evt.movementY / stage.scaleY(),
             });
           }
           break;
@@ -424,6 +444,11 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     this.dragging = false;
 
     if (!ngEvent.event) {
+      return;
+    }
+
+    if (this.middleMouseHeld) {
+      this.middleMouseHeld = false;
       return;
     }
 
@@ -511,7 +536,7 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
       return hullRectConfigs;
     });
 
-    this.totalTV += 10;
+    this.totalCost.update((totalCost) => totalCost + 10);
   }
 
   removeRoomAtPos(pos: Vector2d | null): void {
@@ -527,14 +552,18 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
         return hullRectConfigs;
       });
 
-      this.totalTV -= 10;
+      this.totalCost.update((totalCost) => totalCost - 10);
     }
+  }
+
+  onShipTitleChanged() {
+    this.armamentDetailsService.updateShipTitle(this.shipTitle());
   }
 
   clearEditor(): void {
     this.hullRectConfigs.set([]);
     this.shipElementShapes.set([]);
-    this.totalTV = 0;
+    this.totalCost.set(0);
     (this.selector().getStage() as Transformer).nodes([]);
     this.initHullRectArray();
   }
@@ -561,9 +590,10 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     if (!pos) {
       return null;
     }
+    const stage = this.stage().getStage();
 
     // transform the mouse pos relative to the origin of the stage and scale it by the stage's current scale
-    return { x: (pos.x - this.currentStagePos.x) / this.currentScale, y: (pos.y - this.currentStagePos.y) / this.currentScale } as Vector2d;;
+    return { x: (pos.x - stage.getPosition().x) / stage.scaleX(), y: (pos.y - stage.getPosition().y) / stage.scaleY() } as Vector2d;;
   }
 
   addShipElement(id: string, shipElement: ShipElement, imageConfig: ImageConfig ): void {
@@ -588,6 +618,6 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
       return shipElementShapes;
     });
 
-    this.totalTV += shipElement.tacticalValue;
+    this.totalCost.update((totalCost) => totalCost + shipElement.tacticalValue);
   }
 }

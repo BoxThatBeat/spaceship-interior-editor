@@ -1,4 +1,7 @@
-<h1>Budget: {{ totalTV }} / 2000</h1>
+<div class="header">
+  <input type="text" [(ngModel)]="shipTitle" (keyup)="onShipTitleChanged()" maxlength="24" placeholder="Ship Title" />
+  <h1>Budget: {{ totalCost() }} / 2000</h1>
+</div>
 <section>
   <div (drop)="onImageDropped($event)" (dragover)="onContainerDragOver($event)">
     <ko-stage
@@ -33,6 +36,8 @@
       </ko-layer>
       <ko-layer #armamentLayer>
         <ko-group [config]="armamentGroupConfig">
+          <ko-text [config]="armamentDetailsService.shipTitleTextConfig()"></ko-text>
+
           @for (armamentRectConfig of armamentDetailsService.staticGroupRectConfigs; track $index) {
             <ko-rect [config]="armamentRectConfig"></ko-rect>
           }
