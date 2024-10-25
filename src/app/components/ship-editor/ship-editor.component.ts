@@ -118,14 +118,14 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   public totalTV: number = 0;
 
   public configStage: Partial<StageConfig> = {};
-  public transformConfig: Partial<TransformerConfig> = {
+  public transformConfig: TransformerConfig = {
     resizeEnabled: false,
     rotateEnabled: true,
     rotationSnaps: [0, 90, 180, 270],
     rotationSnapTolerance: 45,
     rotateAnchorOffset: 50,
   };
-  public readonly armamentGroupConfig: Partial<GroupConfig> = {
+  public readonly armamentGroupConfig: GroupConfig = {
     x: 0,
     y: 0,
     draggable: true,

@@ -1,6 +1,7 @@
 import { Injectable, signal, WritableSignal } from '@angular/core';
 import { RectConfig } from 'konva/lib/shapes/Rect';
 import { TextConfig } from 'konva/lib/shapes/Text';
+import { Range } from '../models/range.enum';
 
 const textPadding: number = 15;
 const distanceBetweenWeaponText: number = 50;
@@ -149,7 +150,22 @@ export default class ArmamentDetailsService {
     }
   }
 
-  // Store the weapon information here
-  // Store the shield info here
+  addEngine(name: string, range: Range): void {
+
+  }
+
+  addShieldGenerator(name: string, capacitors: number): void {
+
+  }
+
+  updateTotalCost(amount: number): void {
+
+  }
+
+  updateShipTitle(title: string): void {
+
+  }
+
+  
 
 }
