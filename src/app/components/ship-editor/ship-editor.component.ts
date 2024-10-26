@@ -2,10 +2,10 @@ import {
   AfterViewInit,
   ChangeDetectionStrategy,
   Component,
+  computed,
   effect,
   inject,
   input,
-  NgModule,
   OnInit,
   signal,
   Signal,
@@ -19,7 +19,7 @@ import { Rect, RectConfig } from 'konva/lib/shapes/Rect';
 import { Shape } from 'konva/lib/Shape';
 import { EditorTool } from '../../models/editor-tool.enum';
 import { Vector2d } from 'konva/lib/types';
-import { ShipElement, isShipWeapon, isShipEngine, isShipShieldGenerator } from '../../models/ship-element';
+import { ShipElement } from '../../models/ship-element';
 import { Image, ImageConfig } from 'konva/lib/shapes/Image';
 import { ShipElementShape } from '../../models/ship-element-shape';
 import { Transformer, TransformerConfig } from 'konva/lib/shapes/Transformer';
@@ -38,37 +38,59 @@ import { FormsModule } from '@angular/forms';
   changeDetection: ChangeDetectionStrategy.OnPush, //TODO check if this is causing bugs
 })
 export class ShipEditorComponent implements OnInit, AfterViewInit {
-  stage = viewChild.required(StageComponent);
-  gridLayer: Signal<CoreShapeComponent> = viewChild.required('gridLayer');
-  designLayer: Signal<CoreShapeComponent> = viewChild.required('designLayer');
-  shipElementsLayer: Signal<CoreShapeComponent> = viewChild.required('shipElementsLayer');
-  selector: Signal<CoreShapeComponent> = viewChild.required('selector');
+
+  // ----------------- VIEW CHILDREN -----------------
+  public stage = viewChild.required(StageComponent);
+  public gridLayer: Signal<CoreShapeComponent> = viewChild.required('gridLayer');
+  public designLayer: Signal<CoreShapeComponent> = viewChild.required('designLayer');
+  public shipElementsLayer: Signal<CoreShapeComponent> = viewChild.required('shipElementsLayer');
+  public selector: Signal<CoreShapeComponent> = viewChild.required('selector');
 
   /**
    * The ship element images that are currently created on the canvas TODO: is this needed?
    */
-  shipElementImages: Signal<readonly CoreShapeComponent[]> = viewChildren('shipElementImage');
+  public shipElementImages: Signal<readonly CoreShapeComponent[]> = viewChildren('shipElementImage');
 
-  gridRectConfigs: WritableSignal<Array<RectConfig>> = signal([]);
-  hullRectConfigs: WritableSignal<Array<Array<RectConfig | undefined>>> = signal([]);
-  shipElementShapes: WritableSignal<Array<ShipElementShape>> = signal([]);
+  // ----------------- SIGNALS -----------------
+  public gridRectConfigs: WritableSignal<Array<RectConfig>> = signal([]);
+  public hullRectConfigs: WritableSignal<Array<Array<RectConfig | undefined>>> = signal([]);
+  public shipElementShapes: WritableSignal<Array<ShipElementShape>> = signal([]);
 
-  contextMenuVisible = signal(false);
-  contextMenuTopPosPx = signal(0);
-  contextMenuLeftPosPx = signal(0);
+  public contextMenuVisible = signal(false);
+  public contextMenuTopPosPx = signal(0);
+  public contextMenuLeftPosPx = signal(0);
 
+  public totalCost = signal(0);
+  public shipTitle = signal('');
+
+  // ----------------- KONVA CONFIGS -----------------
+  public configStage: Partial<StageConfig> = {};
+  public transformConfig: TransformerConfig = {
+    resizeEnabled: false,
+    rotateEnabled: true,
+    rotationSnaps: [0, 90, 180, 270],
+    rotationSnapTolerance: 45,
+    rotateAnchorOffset: 50,
+  };
+  public readonly armamentGroupConfig: GroupConfig = {
+    x: 100,
+    y: 100,
+    draggable: true,
+  } as GroupConfig
+
+  // ----------------- INPUT VARIABLES -----------------
   /**
    * The ShipElement image currently being held by the user (with a mouse drag).
    */
   currentlyHeldShipElement = input<ShipElement>();
 
   /**
-   * Width of the designer.
+   * Width of the editor in px.
    */
   editorWidth = input.required<number>();
 
   /**
-   * Height of the designer.
+   * Height of the editor in px.
    */
   editorHeight = input.required<number>();
 
@@ -107,9 +129,9 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
    */
   zoomScaleBy = input.required<number>();
 
-  /**
-   * Computed total tactical value of all ship elements on the canvas.
-   */
+  // ----------------- COMPUTED SIGNALS -----------------
+  gridWidthPx = computed(() => this.gridWidth() * this.gridBlockSize());
+  gridHeightPx = computed(() => this.gridHeight() * this.gridBlockSize());
   // totalCost: Signal<number> = computed(() => {
   //   let total = 0;
   //   this.shipElementShapes().forEach((shape: ShipElementShape) => {
@@ -117,23 +139,8 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   //   });
   //   return total;
   // });
-  public totalCost = signal(0);
-  public shipTitle = signal('');
 
-  public configStage: Partial<StageConfig> = {};
-  public transformConfig: TransformerConfig = {
-    resizeEnabled: false,
-    rotateEnabled: true,
-    rotationSnaps: [0, 90, 180, 270],
-    rotationSnapTolerance: 45,
-    rotateAnchorOffset: 50,
-  };
-  public readonly armamentGroupConfig: GroupConfig = {
-    x: 100,
-    y: 100,
-    draggable: true,
-  } as GroupConfig
-
+  // ----------------- PRIVATE VARIABLES -----------------
   private dragging: boolean = false;
   private middleMouseHeld: boolean = false;
   private selectedShape: Shape | undefined = undefined;
@@ -143,6 +150,7 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   // SERVICES
   public armamentDetailsService = inject(ArmamentDetailsService);
 
+  // ----------------- INITIALIZERS -----------------
   constructor() {
     effect(() => {
       if (this.gridEnabled()) {
@@ -214,6 +222,11 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     }
   }
 
+  // ----------------- EVENT HANDLERS -----------------
+
+  /**
+   * Handles the scroll event on the stage. Zooms in and out by scaling the stage.
+   */
   onStageScroll(ngEventObj: NgKonvaEventObject<WheelEvent>): void {
     if (!ngEventObj.event) {
       return;
@@ -254,6 +267,9 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     stage.position(newPos);
   }
 
+  /**
+   * Handles opening the context menu on the stage when the user right-clicks -> gives option to duplicate or delete ship element
+   */
   onStageContextMenu(ngEventObj: NgKonvaEventObject<PointerEvent>) {
     if (!ngEventObj.event) {
       return;
@@ -286,6 +302,9 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     this.contextMenuLeftPosPx.set(containerRect.left + pointerPos.x + 4);
   }
 
+  /**
+   * Handles the context menu duplicate button being pressed. Duplicates the right-clicked ship element.
+   */
   onContextMenuDuplicateBtnPressed() {
     const elementToDuplicate = this.shipElementShapes().find((shape) => shape.shipElementId === this.rightClickedShipElementId);
     if (!elementToDuplicate) {
@@ -322,19 +341,16 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     this.addShipElement(shipElementId, elementCopy, image);
   }
 
+  /**
+   * Handles the context menu delete button being pressed. Deletes the right-clicked ship element.
+   */
   onContextMenuDeleteBtnPressed() {
     const shipElementToDelete = this.shipElementShapes().find((shape) => shape.shipElementId === this.rightClickedShipElementId)?.shipElement;
     if (!shipElementToDelete) {
       return;
     }
 
-    if (isShipWeapon(shipElementToDelete)) {
-      this.armamentDetailsService.removeWeapon(shipElementToDelete.name);
-    } else if (isShipEngine(shipElementToDelete)) {
-      console.log('deleting engine');
-    } else if (isShipShieldGenerator(shipElementToDelete)) {
-      console.log('deleting shield generator');
-    }
+    this.armamentDetailsService.removeShipElement(shipElementToDelete);
 
     // Delete ship element with rightClickedShipElementId
     this.shipElementShapes.update((shipElementShapes) => {
@@ -354,6 +370,9 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     this.contextMenuVisible.set(false);
   }
 
+  /**
+   * Handles a click on the stage. Does a multitude of things depending on the selected tool.
+   */
   onToolStageDragStart(ngEvent: NgKonvaEventObject<MouseEvent>): void {
     this.dragging = true;
     this.contextMenuVisible.set(false);
@@ -373,10 +392,13 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
 
     switch (this.selectedTool()) {
       case EditorTool.BRUSH:
-        this.addRoomAtPos(this.getScaledPosition(this.stage().getStage().getPointerPosition()));
+        const mousePos = this.getScaledPosition(this.stage().getStage().getPointerPosition());
+        if (this.isWithinGridBounds(mousePos)) {
+          this.addHullAtPos(mousePos);
+        }
         break;
       case EditorTool.ERASER:
-        this.removeRoomAtPos(this.getScaledPosition(this.stage().getStage().getPointerPosition()));
+        this.removeHullAtPos(this.getScaledPosition(this.stage().getStage().getPointerPosition()));
         break;
       case EditorTool.NONE:
         if (ngEvent.event.target === this.stage().getStage()) {
@@ -384,20 +406,21 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
         } else {
           const shape = ngEvent.event.target as Shape;
 
-          if (shape) {
-            if (shape instanceof Image) {
-              shape.moveToTop();
-              (this.selector().getStage() as Transformer).nodes([shape]);
-  
-              this.selectedElementStartPos = { x: shape.x(), y: shape.y() } as Vector2d;
-              this.selectedShape = shape;
-            }
+          if (shape && shape instanceof Image) {
+            shape.moveToTop();
+            (this.selector().getStage() as Transformer).nodes([shape]);
+
+            this.selectedElementStartPos = { x: shape.x(), y: shape.y() } as Vector2d;
+            this.selectedShape = shape;
           }
         }
         break;
     }
   }
 
+  /**
+   * Handles a dragging of the mouse while holding down a mouse button. Does a multitude of things depending on the selected tool.
+   */
   onToolStageDragMove(ngEvent: NgKonvaEventObject<MouseEvent>): void {
     if (!ngEvent.event) {
       return;
@@ -423,23 +446,35 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
 
       switch (this.selectedTool()) {
         case EditorTool.BRUSH:
-          this.addRoomAtPos(this.getScaledPosition(this.stage().getStage().getPointerPosition()));
+          const mousePos = this.getScaledPosition(this.stage().getStage().getPointerPosition());
+          if (this.isWithinGridBounds(mousePos)) {
+            this.addHullAtPos(mousePos);
+          }
           break;
         case EditorTool.ERASER:
-          this.removeRoomAtPos(this.getScaledPosition(this.stage().getStage().getPointerPosition()));
+          this.removeHullAtPos(this.getScaledPosition(this.stage().getStage().getPointerPosition()));
           break;
         case EditorTool.NONE:
           if (this.selectedShape) {
-            this.selectedShape.position({
-              x: this.selectedShape.x() + ngEvent.event.evt.movementX / stage.scaleX(),
-              y: this.selectedShape.y() + ngEvent.event.evt.movementY / stage.scaleY(),
-            });
+
+            const newX = this.selectedShape.x() + ngEvent.event.evt.movementX / stage.scaleX();
+            const newY = this.selectedShape.y() + ngEvent.event.evt.movementY / stage.scaleY();
+            
+            if (this.isWithinGridBounds({ x: newX, y: newY } as Vector2d, this.selectedShape.width(), this.selectedShape.height())) {
+              this.selectedShape.position({
+                x: newX,
+                y: newY,
+              });
+            }
           }
           break;
       }
     }
   }
 
+  /**
+   * Handles the end of a drag event on the stage. Does a multitude of things depending on the selected tool.
+   */
   onToolStageDragEnd(ngEvent: NgKonvaEventObject<MouseEvent>): void {
     this.dragging = false;
 
@@ -468,19 +503,34 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     }
   }
 
+  /**
+   * Handles when an image is being dragged over the container. Prevents default behavior (which prevents the image from being dropped).
+   */
   onContainerDragOver(event: any) {
     // Prevent normal behavior of dragging an image over the container
     event.preventDefault();
   }
 
+  /**
+   * Handles when the ship title text input changes (char by char).
+   */
+  onShipTitleChanged() {
+    this.armamentDetailsService.updateShipTitle(this.shipTitle());
+  }
+
+  // ----------------- KONVA CANVAS MODIFIERS -----------------
+
+  /**
+   * Handles when an image is dropped onto the container. Creates a new ship element image on the canvas.
+   */
   onImageDropped(event: any) {
     event.preventDefault();
 
     // register event position
     this.stage().getStage().setPointersPositions(event);
 
-    let pos = this.getScaledPosition(this.stage().getStage().getPointerPosition());
-    if (pos === null) {
+    let mousePos = this.getScaledPosition(this.stage().getStage().getPointerPosition());
+    if (mousePos === null) {
       return;
     }
 
@@ -489,27 +539,35 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    const gridSnappedPos = this.posSnappedToGrid(pos);
+    const gridSnappedPos = this.posSnappedToGrid(mousePos);
 
-    const img = document.createElement('img');
-    const imageUrl = heldShipElement.imageUrl;
-    if (!imageUrl) {
-      return;
+    if (this.isWithinGridBounds(mousePos)) {
+      const img = document.createElement('img');
+      const imageUrl = heldShipElement.imageUrl;
+      if (!imageUrl) {
+        return;
+      }
+      img.src = imageUrl;
+
+      const shipElementId = uuidv4();
+      let image: ImageConfig = {
+        name: shipElementId,
+        image: img,
+        x: gridSnappedPos.x,
+        y: gridSnappedPos.y,
+      };
+
+      this.addShipElement(shipElementId, heldShipElement, image);
+    } else {
+      console.log('error: image dropped outside of grid bounds');
+      //TODO: show error banner with service
     }
-    img.src = imageUrl;
-
-    const shipElementId = uuidv4();
-    let image: ImageConfig = {
-      name: shipElementId,
-      image: img,
-      x: gridSnappedPos.x,
-      y: gridSnappedPos.y,
-    };
-
-    this.addShipElement(shipElementId, heldShipElement, image);
   }
 
-  addRoomAtPos(pos: Vector2d | null): void {
+  /**
+   * Adds a hull square at the given position.
+   */
+  addHullAtPos(pos: Vector2d | null): void {
     if (!pos) {
       return;
     }
@@ -539,7 +597,10 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     this.totalCost.update((totalCost) => totalCost + 10);
   }
 
-  removeRoomAtPos(pos: Vector2d | null): void {
+  /**
+   * Removes a hull square at the given position.
+   */
+  removeHullAtPos(pos: Vector2d | null): void {
     if (!pos) {
       return;
     }
@@ -556,59 +617,16 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     }
   }
 
-  onShipTitleChanged() {
-    this.armamentDetailsService.updateShipTitle(this.shipTitle());
-  }
-
-  clearEditor(): void {
-    this.hullRectConfigs.set([]);
-    this.shipElementShapes.set([]);
-    this.totalCost.set(0);
-    (this.selector().getStage() as Transformer).nodes([]);
-    this.initHullRectArray();
-  }
-
-  snapToGrid(shape: Shape): void {
-    shape.position({
-      x: Math.round(shape.x() / this.gridBlockSize()) * this.gridBlockSize(),
-      y: Math.round(shape.y() / this.gridBlockSize()) * this.gridBlockSize(),
-    });
-  }
-
-  posSnappedToGrid(pos: Vector2d): Vector2d {
-    return {
-      x: Math.floor(pos.x / this.gridBlockSize()) * this.gridBlockSize(),
-      y: Math.floor(pos.y / this.gridBlockSize()) * this.gridBlockSize(),
-    };
-  }
-
-  posToGridCoords(pos: Vector2d): Vector2d {
-    return { x: Math.floor(pos.x / this.gridBlockSize()), y: Math.floor(pos.y / this.gridBlockSize()) };
-  }
-
-  getScaledPosition(pos: Vector2d | null): Vector2d | null {
-    if (!pos) {
-      return null;
-    }
-    const stage = this.stage().getStage();
-
-    // transform the mouse pos relative to the origin of the stage and scale it by the stage's current scale
-    return { x: (pos.x - stage.getPosition().x) / stage.scaleX(), y: (pos.y - stage.getPosition().y) / stage.scaleY() } as Vector2d;;
-  }
-
+  /**
+   * Adds a ship element with the given id and image to the editor.
+   */
   addShipElement(id: string, shipElement: ShipElement, imageConfig: ImageConfig ): void {
     if (!imageConfig.x || !imageConfig.y) {
       console.log('error: imageConfig missing x or y');
       return;
     }
 
-    if (isShipWeapon(shipElement)) {
-      this.armamentDetailsService.addWeapon(shipElement.name, shipElement.damage, shipElement.accuracy);
-    } else if (isShipEngine(shipElement)) {
-      console.log('adding engine');
-    } else if (isShipShieldGenerator(shipElement)) {
-      console.log('adding shield generator');
-    }
+    this.armamentDetailsService.addShipElement(shipElement);
 
     const gridCoords = this.posToGridCoords({x: imageConfig.x, y: imageConfig.y});
     const newShipElementShape = new ShipElementShape(id, shipElement, gridCoords, imageConfig);
@@ -619,5 +637,72 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     });
 
     this.totalCost.update((totalCost) => totalCost + shipElement.tacticalValue);
+  }
+
+  /**
+   * Handles the clear editor button
+   */
+  clearEditor(): void {
+    this.hullRectConfigs.set([]);
+    this.shipElementShapes.set([]);
+    this.totalCost.set(0);
+    (this.selector().getStage() as Transformer).nodes([]);
+    this.initHullRectArray();
+    this.armamentDetailsService.clearShipElements();
+  }
+
+  // ----------------- HELPER FUNCTIONS -----------------
+
+  /**
+   * Snaps the given shape to the grid.
+   */
+  snapToGrid(shape: Shape): void {
+    shape.position({
+      x: Math.round(shape.x() / this.gridBlockSize()) * this.gridBlockSize(),
+      y: Math.round(shape.y() / this.gridBlockSize()) * this.gridBlockSize(),
+    });
+  }
+
+  /**
+   * Returns the given position snapped to the grid.
+   */
+  posSnappedToGrid(pos: Vector2d): Vector2d {
+    return {
+      x: Math.floor(pos.x / this.gridBlockSize()) * this.gridBlockSize(),
+      y: Math.floor(pos.y / this.gridBlockSize()) * this.gridBlockSize(),
+    };
+  }
+
+  /**
+   * Returns the grid coordinates of the given position (not px)
+   */
+  posToGridCoords(pos: Vector2d): Vector2d {
+    return { x: Math.floor(pos.x / this.gridBlockSize()), y: Math.floor(pos.y / this.gridBlockSize()) };
+  }
+
+  /**
+   * Returns the position transformed and scaled to the stage's current position and scale
+   */
+  getScaledPosition(pos: Vector2d | null): Vector2d | null {
+    if (!pos) {
+      return null;
+    }
+    const stage = this.stage().getStage();
+
+    // transform the mouse pos relative to the origin of the stage and scale it by the stage's current scale
+    return { x: (pos.x - stage.getPosition().x) / stage.scaleX(), y: (pos.y - stage.getPosition().y) / stage.scaleY() } as Vector2d;;
+  }
+
+  /**
+   * Returns whether the given position is within the bounds of the grid.
+   */
+  isWithinGridBounds(pos: Vector2d | null, width?: number, height?: number): boolean {
+    if (!pos) {
+      return false;
+    }
+    if (width && height) {
+      return pos.x >= 0 && pos.x + width <= this.gridWidthPx() && pos.y >= 0 && pos.y + height <= this.gridHeightPx();
+    }
+    return pos.x >= 0 && pos.x <= this.gridWidthPx() && pos.y >= 0 && pos.y <= this.gridHeightPx();
   }
 }

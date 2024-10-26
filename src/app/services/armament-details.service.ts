@@ -2,6 +2,7 @@ import { Injectable, signal, WritableSignal } from '@angular/core';
 import { RectConfig } from 'konva/lib/shapes/Rect';
 import { TextConfig } from 'konva/lib/shapes/Text';
 import { Range } from '../models/range.enum';
+import { isShipEngine, isShipShieldGenerator, isShipWeapon, ShipElement } from '../models/ship-element';
 
 const textPadding: number = 15;
 const distanceBetweenWeaponText: number = 50;
@@ -95,7 +96,45 @@ export default class ArmamentDetailsService {
     fill: fontColor,
   } as TextConfig );
 
-  public addWeapon(name: string, damage: number, accuracy: number): void {
+  public updateTotalCost(amount: number): void {
+    
+  }
+
+  public updateShipTitle(title: string): void {
+    this.shipTitleTextConfig.update((shipTitleTextConfig) => {
+      let titleCopy = { ...shipTitleTextConfig } as TextConfig;
+      titleCopy.text = title;
+      return titleCopy;
+    });
+  }
+  
+  public addShipElement(shipElement: ShipElement): void {
+    if (isShipWeapon(shipElement)) {
+      this.addWeapon(shipElement.name, shipElement.damage, shipElement.accuracy);
+    } else if (isShipEngine(shipElement)) {
+    this.addEngine(shipElement.name, shipElement.speed);
+    } else if (isShipShieldGenerator(shipElement)) {
+      this.addShieldGenerator(shipElement.name, shipElement.capacitors);
+    }
+  }
+
+  public removeShipElement(shipElement: ShipElement): void {
+    if (isShipWeapon(shipElement)) {
+      this.removeWeapon(shipElement.name);
+    } else if (isShipEngine(shipElement)) {
+      console.log('deleting engine');
+    } else if (isShipShieldGenerator(shipElement)) {
+      console.log('deleting shield generator');
+    }
+  }
+
+  public clearShipElements(): void {
+    this.weaponCounts.clear();
+    this.weaponDetailsList.update(() => []);
+    this.currentNumWeapons = 0;
+  }
+
+  private addWeapon(name: string, damage: number, accuracy: number): void {
     // Only adds text if this is the first time the specific weapon name is added
     const weaponCount = this.weaponCounts.get(name);
     if (!weaponCount || (weaponCount && weaponCount === 0)) {
@@ -141,7 +180,7 @@ export default class ArmamentDetailsService {
     }
   }
 
-  removeWeapon(name: string): void {
+  private removeWeapon(name: string): void {
     // Only remove the weapon text if there are 0 instances of the weapon left
     const weaponCount = this.weaponCounts.get(name);
     if (!weaponCount) {
@@ -172,24 +211,19 @@ export default class ArmamentDetailsService {
     this.weaponCounts.set(name, weaponCount - 1);
   }
 
-  addEngine(name: string, range: Range): void {
+  private addEngine(name: string, range: Range): void {
 
   }
 
-  addShieldGenerator(name: string, capacitors: number): void {
+  private removeEngine(name: string): void {
 
   }
 
-  updateTotalCost(amount: number): void {
+  private addShieldGenerator(name: string, capacitors: number): void {
 
   }
 
-  updateShipTitle(title: string): void {
-    this.shipTitleTextConfig.update((shipTitleTextConfig) => {
-      let titleCopy = { ...shipTitleTextConfig } as TextConfig;
-      titleCopy.text = title;
-      return titleCopy;
-    });
-  }
+  private removeShieldGenerator(name: string): void {
 
+  }
 }
