@@ -52,15 +52,17 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   public shipElementImages: Signal<readonly CoreShapeComponent[]> = viewChildren('shipElementImage');
 
   // ----------------- SIGNALS -----------------
+  // These two signals are the app's main state (changes made by the user)
+  //TODO: move each signal into its own service along with all the logic that acts on it
+  public hullRectConfigs: WritableSignal<Array<Array<RectConfig | null>>> = signal([], {equal: () => false });
+  public shipElementShapes: WritableSignal<Array<ShipElementShape>> = signal([], {equal: () => false });
+
   public gridRectConfigs: WritableSignal<Array<RectConfig>> = signal([]);
-  public hullRectConfigs: WritableSignal<Array<Array<RectConfig | undefined>>> = signal([]);
-  public shipElementShapes: WritableSignal<Array<ShipElementShape>> = signal([]);
 
   public contextMenuVisible = signal(false);
   public contextMenuTopPosPx = signal(0);
   public contextMenuLeftPosPx = signal(0);
 
-  public totalCost = signal(0);
   public shipTitle = signal('');
 
   // ----------------- KONVA CONFIGS -----------------
@@ -132,13 +134,21 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   // ----------------- COMPUTED SIGNALS -----------------
   gridWidthPx = computed(() => this.gridWidth() * this.gridBlockSize());
   gridHeightPx = computed(() => this.gridHeight() * this.gridBlockSize());
-  // totalCost: Signal<number> = computed(() => {
-  //   let total = 0;
-  //   this.shipElementShapes().forEach((shape: ShipElementShape) => {
-  //     total += shape.shipElement.tacticalValue;
-  //   });
-  //   return total;
-  // });
+  totalCost: Signal<number> = computed(() => {
+    let total = 0;
+    this.shipElementShapes().forEach((shape: ShipElementShape) => {
+      total += shape.shipElement.tacticalValue;
+    });
+
+    this.hullRectConfigs().forEach((row) => {
+      row.forEach((rect) => {
+        if (rect) {
+          total += 10;
+        }
+      });
+    });
+    return total;
+  });
 
   // ----------------- PRIVATE VARIABLES -----------------
   private dragging: boolean = false;
@@ -159,6 +169,15 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
         this.gridLayer().getStage().hide();
       }
     });
+
+    effect(() => {
+      localStorage.setItem('hullRectConfigsJson', JSON.stringify(this.hullRectConfigs()));
+    });
+
+    effect(() => {
+      localStorage.setItem('shipElementShapesJson', JSON.stringify(this.shipElementShapes()));
+    });
+
   }
 
   ngOnInit(): void {
@@ -176,6 +195,7 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   ngAfterViewInit(): void {
     //Apply initial zoom level
     this.stage().getStage().scale({ x: this.initialStageScale(), y: this.initialStageScale() });
+    this.loadSavedState();
   }
 
   /**
@@ -207,15 +227,15 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     for (let x = 0; x <= this.gridWidth(); x++) {
       this.hullRectConfigs.update((hullRectConfigs) => [
         ...hullRectConfigs,
-        new Array<ShipElement | undefined>(this.gridHeight()),
+        new Array<ShipElement | null>(this.gridHeight()),
       ]);
     }
 
-    // init all elements to undefined
+    // init all elements to null
     for (let x = 0; x < this.gridWidth(); x++) {
       for (let y = 0; y < this.gridHeight(); y++) {
         this.hullRectConfigs.update((hullRectConfigs) => {
-          hullRectConfigs[x][y] = undefined;
+          hullRectConfigs[x][y] = null;
           return hullRectConfigs;
         });
       }
@@ -359,9 +379,6 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
 
     //TODO: fix bug that all ship elements after the one deleted get random rotations if the rotation was changed
     // THis might have to do with the fact that the shapes are recreated and it stores the rotation not the grid config 
-
-    // remove cost of deleted element
-    this.totalCost.update((totalCost) => totalCost - shipElementToDelete.tacticalValue);
 
     // Deselect element
     (this.selector().getStage() as Transformer).nodes([]);
@@ -575,7 +592,8 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     const gridSnappedPos = this.posSnappedToGrid(pos);
     const gridCoords = this.posToGridCoords(gridSnappedPos);
 
-    if (this.hullRectConfigs()[gridCoords.x][gridCoords.y] !== undefined) {
+    // Prevent overlapping hull squares
+    if (this.hullRectConfigs()[gridCoords.x][gridCoords.y] !== null) {
       return;
     }
 
@@ -593,8 +611,6 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
       hullRectConfigs[gridCoords.x][gridCoords.y] = newRectConfig;
       return hullRectConfigs;
     });
-
-    this.totalCost.update((totalCost) => totalCost + 10);
   }
 
   /**
@@ -607,13 +623,11 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
 
     const gridCoords = this.posToGridCoords(pos);
 
-    if (this.hullRectConfigs()[gridCoords.x][gridCoords.y] !== undefined) {
+    if (this.hullRectConfigs()[gridCoords.x][gridCoords.y] !== null) {
       this.hullRectConfigs.update((hullRectConfigs) => {
-        hullRectConfigs[gridCoords.x][gridCoords.y] = undefined;
+        hullRectConfigs[gridCoords.x][gridCoords.y] = null;
         return hullRectConfigs;
       });
-
-      this.totalCost.update((totalCost) => totalCost - 10);
     }
   }
 
@@ -635,8 +649,6 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
       shipElementShapes.push(newShipElementShape);
       return shipElementShapes;
     });
-
-    this.totalCost.update((totalCost) => totalCost + shipElement.tacticalValue);
   }
 
   /**
@@ -645,7 +657,6 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   clearEditor(): void {
     this.hullRectConfigs.set([]);
     this.shipElementShapes.set([]);
-    this.totalCost.set(0);
     (this.selector().getStage() as Transformer).nodes([]);
     this.initHullRectArray();
     this.armamentDetailsService.clearShipElements();
@@ -704,5 +715,32 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
       return pos.x >= 0 && pos.x + width <= this.gridWidthPx() && pos.y >= 0 && pos.y + height <= this.gridHeightPx();
     }
     return pos.x >= 0 && pos.x <= this.gridWidthPx() && pos.y >= 0 && pos.y <= this.gridHeightPx();
+  }
+
+  /**
+   * Loads the saved state from local storage. (the editor will not lose progress upon tab reload)
+   */
+  loadSavedState() {
+    const hullRectConfigsJson = localStorage.getItem('hullRectConfigsJson');
+    if (hullRectConfigsJson) {
+      this.hullRectConfigs.set(JSON.parse(hullRectConfigsJson));
+    }
+
+    const shipElementShapesJson = localStorage.getItem('shipElementShapesJson');
+    if (shipElementShapesJson) {
+      
+      // for each shipElementShape create a new img as the serialization process removes the image property (DOM element)
+      const shipElementShapes = JSON.parse(shipElementShapesJson);
+      shipElementShapes.forEach((shape: ShipElementShape) => {
+        const img = document.createElement('img');
+        const imageUrl = shape.shipElement.imageUrl;
+        if (imageUrl) {
+          img.src = imageUrl;
+        }
+        shape.config = { ...shape.config, image: img } as ImageConfig;
+      });
+
+      this.shipElementShapes.set(shipElementShapes);
+    }
   }
 }

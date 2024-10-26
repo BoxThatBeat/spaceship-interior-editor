@@ -108,6 +108,7 @@ export default class ArmamentDetailsService {
     });
   }
   
+  //TODO: this logic should really be a computed signal based on the shipElementShape signal. This would make saving state easier
   public addShipElement(shipElement: ShipElement): void {
     if (isShipWeapon(shipElement)) {
       this.addWeapon(shipElement.name, shipElement.damage, shipElement.accuracy);
