@@ -58,6 +58,8 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   public shipElementShapes: WritableSignal<Array<ShipElementShape>> = signal([], {equal: () => false });
 
   public gridRectConfigs: WritableSignal<Array<RectConfig>> = signal([]);
+  public doorRectConfigs: WritableSignal<Array<RectConfig>> = signal([]);
+  public doorRectShadowConfig: WritableSignal<RectConfig> = signal({} as RectConfig);
 
   public contextMenuVisible = signal(false);
   public contextMenuTopPosPx = signal(0);
@@ -409,13 +411,13 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
 
     switch (this.selectedTool()) {
       case EditorTool.BRUSH:
-        const mousePos = this.getScaledPosition(this.stage().getStage().getPointerPosition());
-        if (this.isWithinGridBounds(mousePos)) {
-          this.addHullAtPos(mousePos);
-        }
+        this.useBrushTool();
         break;
       case EditorTool.ERASER:
-        this.removeHullAtPos(this.getScaledPosition(this.stage().getStage().getPointerPosition()));
+        this.useEraserTool();
+        break;
+      case EditorTool.DOOR:
+        this.useDoorTool();
         break;
       case EditorTool.NONE:
         if (ngEvent.event.target === this.stage().getStage()) {
@@ -463,13 +465,13 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
 
       switch (this.selectedTool()) {
         case EditorTool.BRUSH:
-          const mousePos = this.getScaledPosition(this.stage().getStage().getPointerPosition());
-          if (this.isWithinGridBounds(mousePos)) {
-            this.addHullAtPos(mousePos);
-          }
+          this.useBrushTool();
           break;
         case EditorTool.ERASER:
-          this.removeHullAtPos(this.getScaledPosition(this.stage().getStage().getPointerPosition()));
+          this.useEraserTool();
+          break;
+        case EditorTool.DOOR:
+          this.useDoorTool();
           break;
         case EditorTool.NONE:
           if (this.selectedShape) {
@@ -486,6 +488,47 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
           }
           break;
       }
+    }
+  }
+
+  onStageHover(ngEvent: NgKonvaEventObject<MouseEvent>) {
+    if (!ngEvent.event) {
+      return;
+    }
+
+    if (this.selectedTool() === EditorTool.DOOR) {
+      this.placeDoorShadowAtPos(this.getScaledPosition(this.stage().getStage().getPointerPosition()));
+    }
+  }
+
+  onStageHoverLeave(ngEvent: NgKonvaEventObject<MouseEvent>) {
+    this.doorRectShadowConfig.set({} as RectConfig);
+  }
+
+  /**
+   * Use the brush tool to add hull squares to the grid.
+   */
+  useBrushTool() {
+    const mousePos = this.getScaledPosition(this.stage().getStage().getPointerPosition());
+    if (this.isWithinGridBounds(mousePos)) {
+      this.addHullAtPos(mousePos);
+    }
+  }
+
+  /**
+   * Use the eraser tool to remove hull squares from the grid.
+   */
+  useEraserTool() {
+    this.removeHullAtPos(this.getScaledPosition(this.stage().getStage().getPointerPosition()));
+  }
+
+  /**
+   * Use the door tool to add doors to ship hulls.
+   */
+  useDoorTool() {
+    const mousePos = this.getScaledPosition(this.stage().getStage().getPointerPosition());
+    if (this.isWithinGridBounds(mousePos)) {
+      this.addDoorAtPos(mousePos);
     }
   }
 
@@ -631,6 +674,87 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     }
   }
 
+  placeDoorShadowAtPos(pos: Vector2d | null): void {
+    if (!pos) {
+      return;
+    }
+
+    //TODO: move to property
+    const doorWidth = 50;
+    const doorHeight = 200;
+
+    // get position snapped to grid
+    const gridSnappedPos = this.posSnappedToGrid(pos);
+
+    // calculate how close the mouse is to the top, bottom, left, or right of the grid block
+    const xDiff = pos.x % this.gridBlockSize();
+    const yDiff = pos.y % this.gridBlockSize();
+
+    const distanceToRightEdge = this.gridBlockSize() - xDiff;
+    const distanceToLeftEdge = xDiff; 
+    const distanceToBottomEdge = this.gridBlockSize() - yDiff;
+    const distanceToTopEdge = yDiff;
+
+    // log the direction with the shortest distance
+    const closestDistance = Math.min(distanceToLeftEdge, distanceToRightEdge, distanceToTopEdge, distanceToBottomEdge);
+    
+    switch(closestDistance) {
+      case distanceToLeftEdge:
+        this.doorRectShadowConfig.set({
+          x: gridSnappedPos.x - doorWidth / 2,
+          y: gridSnappedPos.y + this.gridBlockSize() / 2 - doorHeight / 2,
+          width: doorWidth,
+          height: doorHeight,
+          fill: '#CDCDCD',
+          stroke: '#fffff',
+          strokeWidth: 10,
+        } as RectConfig);
+        break;
+      case distanceToRightEdge:
+        this.doorRectShadowConfig.set({
+          x: gridSnappedPos.x + this.gridBlockSize() - doorWidth / 2,
+          y: gridSnappedPos.y + this.gridBlockSize() / 2 - doorHeight / 2,
+          width: doorWidth,
+          height: doorHeight,
+          fill: '#CDCDCD',
+          stroke: '#fffff',
+          strokeWidth: 10,
+        } as RectConfig);
+        break;
+      case distanceToTopEdge:
+        this.doorRectShadowConfig.set({
+          x: gridSnappedPos.x + this.gridBlockSize() / 2 - doorHeight / 2,
+          y: gridSnappedPos.y - doorWidth / 2,
+          width: doorHeight,
+          height: doorWidth,
+          fill: '#CDCDCD',
+          stroke: '#fffff',
+          strokeWidth: 10,
+        } as RectConfig);
+        break;
+      case distanceToBottomEdge:
+        this.doorRectShadowConfig.set({
+          x: gridSnappedPos.x + this.gridBlockSize() / 2 - doorHeight / 2,
+          y: gridSnappedPos.y + this.gridBlockSize() - doorWidth / 2,
+          width: doorHeight,
+          height: doorWidth,
+          fill: '#CDCDCD',
+          stroke: '#fffff',
+          strokeWidth: 10,
+        } as RectConfig);
+        break;
+    }
+  }
+
+  addDoorAtPos(pos: Vector2d | null): void {
+    if (!pos) {
+      return;
+    }
+
+    console.log('adding door');
+
+  }
+
   /**
    * Adds a ship element with the given id and image to the editor.
    */
@@ -729,6 +853,7 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     const shipElementShapesJson = localStorage.getItem('shipElementShapesJson');
     if (shipElementShapesJson) {
       
+      //TODO: reapply rotations since they get lost since not stored in the image config. Could implement your own rotation by having 4 images per gun
       // for each shipElementShape create a new img as the serialization process removes the image property (DOM element)
       const shipElementShapes = JSON.parse(shipElementShapesJson);
       shipElementShapes.forEach((shape: ShipElementShape) => {

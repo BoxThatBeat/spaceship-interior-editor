@@ -19,6 +19,11 @@
         ink_eraser
       </span>
     </mat-button-toggle>
+    <mat-button-toggle matTooltip="(ctrl+d)" [value]="EditorTool.DOOR">
+      <span class="material-symbols-sharp" [ngClass]="{ 'btn-toggle-icon-active': currentTool === EditorTool.DOOR }">
+        sensor_door
+      </span>
+    </mat-button-toggle>
   </mat-button-toggle-group>
 
   <button mat-icon-button matTooltip="(ctrl+z)">

@@ -9,6 +9,8 @@
       (mousedown)="onToolStageDragStart($event)"
       (mouseup)="onToolStageDragEnd($event)"
       (mousemove)="onToolStageDragMove($event)"
+      (mousemove)="onStageHover($event)"
+      (mouseleave)="onStageHoverLeave($event)"
       (wheel)="onStageScroll($event)"
       (contextmenu)="onStageContextMenu($event)"
     >
@@ -25,6 +27,11 @@
               <ko-rect [config]="hullRectConfig"></ko-rect>
             }
           }
+        }
+
+        <ko-rect [config]="doorRectShadowConfig()"></ko-rect>
+        @for (doorRectConfig of doorRectConfigs(); track $index) {
+          <ko-rect [config]="doorRectConfig"></ko-rect>
         }
       </ko-layer>
       <ko-layer #shipElementsLayer>

@@ -74,6 +74,12 @@ export class EditorToolbarComponent {
     this.changeTool(EditorTool.ERASER);
   }
 
+  @HostListener('document:keydown.control.d', ['$event'])
+  chooseDoorTool(e: KeyboardEvent) {
+    e.preventDefault();
+    this.changeTool(EditorTool.DOOR);
+  }
+
   @HostListener('document:keydown.control.z', ['$event'])
   performUndo(e: KeyboardEvent) {
     e.preventDefault();
