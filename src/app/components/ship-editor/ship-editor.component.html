@@ -19,7 +19,7 @@
           <ko-rect [config]="rectConfig"></ko-rect>
         }
       </ko-layer>
-      <ko-layer #designLayer>
+      <ko-layer #shipHullsLayer>
         @for (hullRow of hullRectConfigs(); track $index) {
           @for (hullRectConfig of hullRow; track $index) {
             <!-- Draw a ship element either with Konva shapes or an image -->
@@ -28,7 +28,8 @@
             }
           }
         }
-
+      </ko-layer>
+      <ko-layer #shipDoorsLayer>
         <ko-rect [config]="doorRectShadowConfig()"></ko-rect>
         @for (doorRectConfig of doorRectConfigs(); track $index) {
           <ko-rect [config]="doorRectConfig"></ko-rect>

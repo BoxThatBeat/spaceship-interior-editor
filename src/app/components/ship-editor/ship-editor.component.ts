@@ -42,8 +42,6 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   // ----------------- VIEW CHILDREN -----------------
   public stage = viewChild.required(StageComponent);
   public gridLayer: Signal<CoreShapeComponent> = viewChild.required('gridLayer');
-  public designLayer: Signal<CoreShapeComponent> = viewChild.required('designLayer');
-  public shipElementsLayer: Signal<CoreShapeComponent> = viewChild.required('shipElementsLayer');
   public selector: Signal<CoreShapeComponent> = viewChild.required('selector');
 
   /**
@@ -56,10 +54,10 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   //TODO: move each signal into its own service along with all the logic that acts on it
   public hullRectConfigs: WritableSignal<Array<Array<RectConfig | null>>> = signal([], {equal: () => false });
   public shipElementShapes: WritableSignal<Array<ShipElementShape>> = signal([], {equal: () => false });
+  public doorRectConfigs: WritableSignal<Array<RectConfig>> = signal([], {equal: () => false });
+  public doorRectShadowConfig: WritableSignal<RectConfig> = signal({} as RectConfig);
 
   public gridRectConfigs: WritableSignal<Array<RectConfig>> = signal([]);
-  public doorRectConfigs: WritableSignal<Array<RectConfig>> = signal([]);
-  public doorRectShadowConfig: WritableSignal<RectConfig> = signal({} as RectConfig);
 
   public contextMenuVisible = signal(false);
   public contextMenuTopPosPx = signal(0);
@@ -119,6 +117,16 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   gridEnabled = input<boolean>();
 
   /**
+   * The width of the door objects in px
+   */
+  shipDoorWidth = input.required<number>();
+
+  /**
+   * The height of the door objects in px
+   */
+  shipDoorHeight = input.required<number>();
+
+  /**
    * The currently selected tool.
    */
   selectedTool = input<EditorTool>(EditorTool.NONE);
@@ -136,6 +144,8 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   // ----------------- COMPUTED SIGNALS -----------------
   gridWidthPx = computed(() => this.gridWidth() * this.gridBlockSize());
   gridHeightPx = computed(() => this.gridHeight() * this.gridBlockSize());
+  shipDoorHalfWidth = computed(() => this.shipDoorWidth() / 2);
+  shipDoorHalfHeight = computed(() => this.shipDoorHeight() / 2);
   totalCost: Signal<number> = computed(() => {
     let total = 0;
     this.shipElementShapes().forEach((shape: ShipElementShape) => {
@@ -172,14 +182,10 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
       }
     });
 
-    effect(() => {
-      localStorage.setItem('hullRectConfigsJson', JSON.stringify(this.hullRectConfigs()));
-    });
-
-    effect(() => {
-      localStorage.setItem('shipElementShapesJson', JSON.stringify(this.shipElementShapes()));
-    });
-
+    // Save state to local storage to allow page reload without losing progress
+    effect(() => localStorage.setItem('hullRectConfigsJson', JSON.stringify(this.hullRectConfigs())));
+    effect(() => localStorage.setItem('doorRectConfigsJson', JSON.stringify(this.doorRectConfigs())));
+    effect(() => localStorage.setItem('shipElementShapesJson', JSON.stringify(this.shipElementShapes())));
   }
 
   ngOnInit(): void {
@@ -679,10 +685,6 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    //TODO: move to property
-    const doorWidth = 50;
-    const doorHeight = 200;
-
     // get position snapped to grid
     const gridSnappedPos = this.posSnappedToGrid(pos);
 
@@ -701,10 +703,10 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     switch(closestDistance) {
       case distanceToLeftEdge:
         this.doorRectShadowConfig.set({
-          x: gridSnappedPos.x - doorWidth / 2,
-          y: gridSnappedPos.y + this.gridBlockSize() / 2 - doorHeight / 2,
-          width: doorWidth,
-          height: doorHeight,
+          x: gridSnappedPos.x - this.shipDoorHalfWidth(),
+          y: gridSnappedPos.y + this.gridBlockSize() / 2 - this.shipDoorHalfHeight(),
+          width: this.shipDoorWidth(),
+          height: this.shipDoorHeight(),
           fill: '#CDCDCD',
           stroke: '#fffff',
           strokeWidth: 10,
@@ -712,10 +714,10 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
         break;
       case distanceToRightEdge:
         this.doorRectShadowConfig.set({
-          x: gridSnappedPos.x + this.gridBlockSize() - doorWidth / 2,
-          y: gridSnappedPos.y + this.gridBlockSize() / 2 - doorHeight / 2,
-          width: doorWidth,
-          height: doorHeight,
+          x: gridSnappedPos.x + this.gridBlockSize() - this.shipDoorHalfWidth(),
+          y: gridSnappedPos.y + this.gridBlockSize() / 2 - this.shipDoorHalfHeight(),
+          width: this.shipDoorWidth(),
+          height: this.shipDoorHeight(),
           fill: '#CDCDCD',
           stroke: '#fffff',
           strokeWidth: 10,
@@ -723,10 +725,10 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
         break;
       case distanceToTopEdge:
         this.doorRectShadowConfig.set({
-          x: gridSnappedPos.x + this.gridBlockSize() / 2 - doorHeight / 2,
-          y: gridSnappedPos.y - doorWidth / 2,
-          width: doorHeight,
-          height: doorWidth,
+          x: gridSnappedPos.x + this.gridBlockSize() / 2 - this.shipDoorHalfHeight(),
+          y: gridSnappedPos.y - this.shipDoorHalfWidth(),
+          width: this.shipDoorHeight(),
+          height: this.shipDoorWidth(),
           fill: '#CDCDCD',
           stroke: '#fffff',
           strokeWidth: 10,
@@ -734,10 +736,10 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
         break;
       case distanceToBottomEdge:
         this.doorRectShadowConfig.set({
-          x: gridSnappedPos.x + this.gridBlockSize() / 2 - doorHeight / 2,
-          y: gridSnappedPos.y + this.gridBlockSize() - doorWidth / 2,
-          width: doorHeight,
-          height: doorWidth,
+          x: gridSnappedPos.x + this.gridBlockSize() / 2 - this.shipDoorHalfHeight(),
+          y: gridSnappedPos.y + this.gridBlockSize() - this.shipDoorHalfWidth(),
+          width: this.shipDoorHeight(),
+          height: this.shipDoorWidth(),
           fill: '#CDCDCD',
           stroke: '#fffff',
           strokeWidth: 10,
@@ -751,7 +753,20 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    console.log('adding door');
+    const doorConfig = {
+      x: this.doorRectShadowConfig().x,
+      y: this.doorRectShadowConfig().y,
+      width: this.doorRectShadowConfig().width,
+      height: this.doorRectShadowConfig().height,
+      fill: '#CDCDCD',
+      stroke: '#fffff',
+      strokeWidth: 10,
+    } as RectConfig
+
+    this.doorRectConfigs.update((doors) => {
+      doors.push(doorConfig)
+      return doors;
+    })
 
   }
 
@@ -780,6 +795,7 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
    */
   clearEditor(): void {
     this.hullRectConfigs.set([]);
+    this.doorRectConfigs.set([]);
     this.shipElementShapes.set([]);
     (this.selector().getStage() as Transformer).nodes([]);
     this.initHullRectArray();
@@ -848,6 +864,11 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     const hullRectConfigsJson = localStorage.getItem('hullRectConfigsJson');
     if (hullRectConfigsJson) {
       this.hullRectConfigs.set(JSON.parse(hullRectConfigsJson));
+    }
+
+    const doorRectConfigsJson = localStorage.getItem('doorRectConfigsJson');
+    if (doorRectConfigsJson) {
+      this.doorRectConfigs.set(JSON.parse(doorRectConfigsJson));
     }
 
     const shipElementShapesJson = localStorage.getItem('shipElementShapesJson');
