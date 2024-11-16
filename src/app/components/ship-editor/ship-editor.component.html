@@ -15,6 +15,7 @@
       (contextmenu)="onStageContextMenu($event)"
     >
       <ko-layer #gridLayer>
+        <ko-rect [config]="backgroundRectConfig"></ko-rect>
         @for (rectConfig of gridRectConfigs(); track $index) {
           <ko-rect [config]="rectConfig"></ko-rect>
         }

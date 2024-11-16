@@ -67,6 +67,7 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
 
   // ----------------- KONVA CONFIGS -----------------
   public configStage: Partial<StageConfig> = {};
+  public backgroundRectConfig: Partial<RectConfig> = {};
   public transformConfig: TransformerConfig = {
     resizeEnabled: false,
     rotateEnabled: true,
@@ -195,6 +196,14 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
       height: this.editorHeight(),
       draggable: false,
     };
+
+    this.backgroundRectConfig = {
+      x: 0,
+      y: 0,
+      width: this.gridBlockSize() * this.gridWidth(),
+      height: this.gridBlockSize() * this.gridHeight(),
+      fill: 'white',
+    }
 
     this.initGrid();
     this.initHullRectArray();
@@ -788,6 +797,40 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
       shipElementShapes.push(newShipElementShape);
       return shipElementShapes;
     });
+  }
+
+  /**
+   * Exports the canvas to png for printing
+   */
+  exportShip(): void {
+    // Disable the grid
+    this.gridLayer().getStage().hide();
+
+    // Close selection
+    (this.selector().getStage() as Transformer).nodes([]);
+
+    // Set the stage position to origin and the scale to starting scale
+    this.stage().getStage().position({ x: 0, y: 0 });
+    this.stage().getStage().scale({ x: this.initialStageScale(), y: this.initialStageScale() });
+    this.stage().getStage().toImage({
+      mimeType: 'image/png',
+      pixelRatio: 3,
+      callback: (img: HTMLImageElement) => {
+        // const a = document.createElement('a');
+        // a.href = img.src;
+        // a.download = 'ship.png';
+        // a.click();
+
+        // Instead open print dialog for image
+        const printWindow = window.open('', '_blank');
+        printWindow?.document.open();
+        printWindow?.document.write(`<img src="${img.src}" style="width: 100%; height: 100%; object-fit: cover;">`);
+        printWindow?.document.close();
+        printWindow?.print();
+      },
+    })
+
+    //TODO: Put things back perhaps?
   }
 
   /**

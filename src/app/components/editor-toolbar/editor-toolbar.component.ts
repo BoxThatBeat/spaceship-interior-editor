@@ -24,6 +24,7 @@ export class EditorToolbarComponent {
   gridToggleChange = output<boolean>();
   undoEdit = output<void>();
   redoEdit = output<void>();
+  exportShip = output<void>();
   clearEditor = output<void>();
 
   changeTool(tool: EditorTool) {
@@ -45,6 +46,10 @@ export class EditorToolbarComponent {
 
   public onGridToggleChange(event: MatButtonToggleChange): void {
     this.gridToggleChange.emit(event.source.checked as boolean);
+  }
+
+  public onExportShip(): void {
+    this.exportShip.emit();
   }
 
   public onClear(): void {
