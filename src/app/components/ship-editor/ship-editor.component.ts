@@ -55,7 +55,7 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   public hullRectConfigs: WritableSignal<Array<Array<RectConfig | null>>> = signal([], {equal: () => false });
   public shipElementShapes: WritableSignal<Array<ShipElementShape>> = signal([], {equal: () => false });
   public doorRectConfigs: WritableSignal<Array<RectConfig>> = signal([], {equal: () => false });
-  public doorRectShadowConfig: WritableSignal<RectConfig> = signal({} as RectConfig);
+  public doorRectShadowConfigs: WritableSignal<Array<RectConfig>> = signal([], {equal: () => false });
 
   public gridRectConfigs: WritableSignal<Array<RectConfig>> = signal([]);
 
@@ -517,7 +517,7 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   }
 
   onStageHoverLeave(ngEvent: NgKonvaEventObject<MouseEvent>) {
-    this.doorRectShadowConfig.set({} as RectConfig);
+    this.doorRectShadowConfigs.set([]);
   }
 
   /**
@@ -541,10 +541,7 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
    * Use the door tool to add doors to ship hulls.
    */
   useDoorTool() {
-    const mousePos = this.getScaledPosition(this.stage().getStage().getPointerPosition());
-    if (this.isWithinGridBounds(mousePos)) {
-      this.addDoorAtPos(mousePos);
-    }
+    this.addDoorAtShadowPos();
   }
 
   /**
@@ -709,71 +706,118 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     // log the direction with the shortest distance
     const closestDistance = Math.min(distanceToLeftEdge, distanceToRightEdge, distanceToTopEdge, distanceToBottomEdge);
     
+    let shadowRectConfigPair = [];
     switch(closestDistance) {
       case distanceToLeftEdge:
-        this.doorRectShadowConfig.set({
+        shadowRectConfigPair.push({
           x: gridSnappedPos.x - this.shipDoorHalfWidth(),
           y: gridSnappedPos.y + this.gridBlockSize() / 2 - this.shipDoorHalfHeight(),
           width: this.shipDoorWidth(),
-          height: this.shipDoorHeight(),
+          height: this.shipDoorHeight() / 2,
           fill: '#CDCDCD',
           stroke: '#fffff',
-          strokeWidth: 10,
+          strokeWidth: 6,
+        } as RectConfig);
+        shadowRectConfigPair.push({
+          x: gridSnappedPos.x - this.shipDoorHalfWidth(),
+          y: gridSnappedPos.y + this.gridBlockSize() / 2,
+          width: this.shipDoorWidth(),
+          height: this.shipDoorHeight() / 2,
+          fill: '#CDCDCD',
+          stroke: '#fffff',
+          strokeWidth: 6,
         } as RectConfig);
         break;
       case distanceToRightEdge:
-        this.doorRectShadowConfig.set({
+        shadowRectConfigPair.push({
           x: gridSnappedPos.x + this.gridBlockSize() - this.shipDoorHalfWidth(),
           y: gridSnappedPos.y + this.gridBlockSize() / 2 - this.shipDoorHalfHeight(),
           width: this.shipDoorWidth(),
-          height: this.shipDoorHeight(),
+          height: this.shipDoorHeight() / 2,
           fill: '#CDCDCD',
           stroke: '#fffff',
-          strokeWidth: 10,
+          strokeWidth: 6,
+        } as RectConfig);
+        shadowRectConfigPair.push({
+          x: gridSnappedPos.x + this.gridBlockSize() - this.shipDoorHalfWidth(),
+          y: gridSnappedPos.y + this.gridBlockSize() / 2,
+          width: this.shipDoorWidth(),
+          height: this.shipDoorHeight() / 2,
+          fill: '#CDCDCD',
+          stroke: '#fffff',
+          strokeWidth: 6,
         } as RectConfig);
         break;
       case distanceToTopEdge:
-        this.doorRectShadowConfig.set({
+        shadowRectConfigPair.push({
           x: gridSnappedPos.x + this.gridBlockSize() / 2 - this.shipDoorHalfHeight(),
           y: gridSnappedPos.y - this.shipDoorHalfWidth(),
-          width: this.shipDoorHeight(),
+          width: this.shipDoorHeight() / 2,
           height: this.shipDoorWidth(),
           fill: '#CDCDCD',
           stroke: '#fffff',
-          strokeWidth: 10,
+          strokeWidth: 6,
+        } as RectConfig);
+        shadowRectConfigPair.push({
+          x: gridSnappedPos.x + this.gridBlockSize() / 2,
+          y: gridSnappedPos.y - this.shipDoorHalfWidth(),
+          width: this.shipDoorHeight() / 2,
+          height: this.shipDoorWidth(),
+          fill: '#CDCDCD',
+          stroke: '#fffff',
+          strokeWidth: 6,
         } as RectConfig);
         break;
       case distanceToBottomEdge:
-        this.doorRectShadowConfig.set({
+        shadowRectConfigPair.push({
           x: gridSnappedPos.x + this.gridBlockSize() / 2 - this.shipDoorHalfHeight(),
           y: gridSnappedPos.y + this.gridBlockSize() - this.shipDoorHalfWidth(),
-          width: this.shipDoorHeight(),
+          width: this.shipDoorHeight() / 2,
           height: this.shipDoorWidth(),
           fill: '#CDCDCD',
           stroke: '#fffff',
-          strokeWidth: 10,
+          strokeWidth: 6,
+        } as RectConfig);
+        shadowRectConfigPair.push({
+          x: gridSnappedPos.x + this.gridBlockSize() / 2,
+          y: gridSnappedPos.y + this.gridBlockSize() - this.shipDoorHalfWidth(),
+          width: this.shipDoorHeight() / 2,
+          height: this.shipDoorWidth(),
+          fill: '#CDCDCD',
+          stroke: '#fffff',
+          strokeWidth: 6,
         } as RectConfig);
         break;
     }
+
+    this.doorRectShadowConfigs.set(shadowRectConfigPair);
   }
 
-  addDoorAtPos(pos: Vector2d | null): void {
-    if (!pos) {
-      return;
-    }
+  addDoorAtShadowPos(): void {
 
-    const doorConfig = {
-      x: this.doorRectShadowConfig().x,
-      y: this.doorRectShadowConfig().y,
-      width: this.doorRectShadowConfig().width,
-      height: this.doorRectShadowConfig().height,
+    const doorLeftRectConfig = {
+      x: this.doorRectShadowConfigs()[0].x,
+      y: this.doorRectShadowConfigs()[0].y,
+      width: this.doorRectShadowConfigs()[0].width,
+      height: this.doorRectShadowConfigs()[0].height,
       fill: '#CDCDCD',
       stroke: '#fffff',
-      strokeWidth: 10,
+      strokeWidth: 6,
+    } as RectConfig
+
+    const doorRightRectConfig = {
+      x: this.doorRectShadowConfigs()[1].x,
+      y: this.doorRectShadowConfigs()[1].y,
+      width: this.doorRectShadowConfigs()[1].width,
+      height: this.doorRectShadowConfigs()[1].height,
+      fill: '#CDCDCD',
+      stroke: '#fffff',
+      strokeWidth: 6,
     } as RectConfig
 
     this.doorRectConfigs.update((doors) => {
-      doors.push(doorConfig)
+      doors.push(doorLeftRectConfig);
+      doors.push(doorRightRectConfig);
       return doors;
     })
 

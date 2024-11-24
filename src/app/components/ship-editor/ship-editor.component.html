@@ -31,7 +31,9 @@
         }
       </ko-layer>
       <ko-layer #shipDoorsLayer>
-        <ko-rect [config]="doorRectShadowConfig()"></ko-rect>
+        @for (doorRectShadowConfig of doorRectShadowConfigs(); track $index) {
+          <ko-rect [config]="doorRectShadowConfig"></ko-rect>
+        }
         @for (doorRectConfig of doorRectConfigs(); track $index) {
           <ko-rect [config]="doorRectConfig"></ko-rect>
         }
