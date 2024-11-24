@@ -74,6 +74,9 @@
   {
     "name": "Small Thruster",
     "type": "Engines",
+    "imageFileName": "/assets/ship-element-images/ThrusterSmall.png",
+    "imageWidth": "600",
+    "imageHeight": "300",
     "notes": [],
     "tacticalValue": 50
   },
@@ -82,9 +85,12 @@
     "type": "Engines",
     "notes": [
       "Can only be placed on the outer edge of ship",
-      "Takes up 2x2 on grid",
+      "Takes up 2x3 on grid",
       "At least 1 required on capital ships"
     ],
+    "imageFileName": "/assets/ship-element-images/ThrusterLarge.png",
+    "imageWidth": "900",
+    "imageHeight": "600",
     "tacticalValue": 150
   },
   {
@@ -149,6 +155,9 @@
     "name": "Large Shield Generator",
     "type": "Shields",
     "notes": [],
+    "imageFileName": "/assets/ship-element-images/ShieldGeneratorLarge.png",
+    "imageWidth": "600",
+    "imageHeight": "600",
     "tacticalValue": 400
   }
 ]
