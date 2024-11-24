@@ -76,26 +76,30 @@
     "tacticalValue": 150
   },
   {
-    "name": "Engine v5",
+    "name": "Fusion Reactor v5",
     "type": "Engines",
+    "imageFileName": "/assets/ship-element-images/FusionReactorSmall.png",
     "notes": [],
     "tacticalValue": 100
   },
   {
-    "name": "Engine v10",
+    "name": "Fusion Reactor v10",
     "type": "Engines",
+    "imageFileName": "/assets/ship-element-images/FusionReactorSmall.png",
     "notes": [],
     "tacticalValue": 200
   },
   {
-    "name": "Engine v15",
+    "name": "Fusion Reactor v15",
     "type": "Engines",
+    "imageFileName": "/assets/ship-element-images/FusionReactorSmall.png",
     "notes": [],
     "tacticalValue": 500
   },
   {
-    "name": "Large Engine",
+    "name": "Large Fusion Reactor",
     "type": "Engines",
+    "imageFileName": "/assets/ship-element-images/FusionReactorLarge.png",
     "notes": [],
     "tacticalValue": 500
   },
