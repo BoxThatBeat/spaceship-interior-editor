@@ -9,7 +9,7 @@
   </div>
   <div class="image-container">
     <img
-      class="ship-element-image"
+      [ngClass]="wideImage() ? 'ship-element-image-wide' : 'ship-element-image-square'"
       #shipElementImage
       src="{{ shipElement().imageFileName }}"
       alt="{{ shipElement().name }}"

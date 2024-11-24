@@ -1,17 +1,25 @@
-import { Component, input, OnInit, output, Signal, viewChild } from '@angular/core';
+import { Component, input, OnInit, output, signal } from '@angular/core';
 import { ShipElement } from '../../models/ship-element';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-ship-element',
   standalone: true,
-  imports: [],
+  imports: [CommonModule],
   templateUrl: './ship-element.component.html',
   styleUrl: './ship-element.component.scss',
 })
-export class ShipElementComponent {
+export class ShipElementComponent implements OnInit {
   shipElement = input.required<ShipElement>();
+  wideImage = signal(false);
 
   heldImageSrc = output<string>();
+
+  ngOnInit(): void {
+    if (this.shipElement().imageWidth > this.shipElement().imageHeight) {
+      this.wideImage.set(true);
+    }
+  }
 
   public onImageDrag(event: any): void {
     this.heldImageSrc.emit(event.target.src);

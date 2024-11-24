@@ -7,6 +7,8 @@ interface ShipElementBase {
   notes?: string[];
   imageFileName?: string;
   imageUrl?: string;
+  imageWidth: string;
+  imageHeight: string
 }
 
 interface ShipWeapon extends ShipElementBase {
