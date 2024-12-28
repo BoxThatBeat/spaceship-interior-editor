@@ -721,14 +721,10 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    // get position snapped to grid
-    const gridSnappedPos = this.posSnappedToGrid(pos);
-    //TODO: improve this to be closest vert
-
     this.penCircleShadowConfig.set(
       {
-        x: gridSnappedPos.x,
-        y: gridSnappedPos.y,
+        x: Math.round(pos.x / this.gridBlockSize()) * this.gridBlockSize(),
+        y: Math.round(pos.y / this.gridBlockSize()) * this.gridBlockSize(),
         strokeEnabled: true,
         stroke: 'black',
         strokeWidth: 5,
