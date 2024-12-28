@@ -9,6 +9,11 @@
         arrow_selector_tool
       </span>
     </mat-button-toggle>
+    <mat-button-toggle matTooltip="(ctrl+o)" [value]="EditorTool.PEN">
+      <span class="material-symbols-sharp" [ngClass]="{ 'btn-toggle-icon-active': currentTool === EditorTool.PEN }">
+        border_color
+      </span>
+    </mat-button-toggle>
     <mat-button-toggle matTooltip="(ctrl+b)" [value]="EditorTool.BRUSH">
       <span class="material-symbols-sharp" [ngClass]="{ 'btn-toggle-icon-active': currentTool === EditorTool.BRUSH }">
         brush

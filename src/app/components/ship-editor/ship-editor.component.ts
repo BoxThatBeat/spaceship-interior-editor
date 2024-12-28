@@ -28,6 +28,9 @@ import { v4 as uuidv4 } from 'uuid';
 import ArmamentDetailsService from '../../services/armament-details.service';
 import { GroupConfig } from 'konva/lib/Group';
 import { FormsModule } from '@angular/forms';
+import { CircleConfig } from 'konva/lib/shapes/Circle';
+import { Line, LineConfig } from 'konva/lib/shapes/Line';
+import { RegularPolygonConfig } from 'konva/lib/shapes/RegularPolygon';
 
 @Component({
   selector: 'app-ship-editor',
@@ -56,6 +59,9 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   public shipElementShapes: WritableSignal<Array<ShipElementShape>> = signal([], {equal: () => false });
   public doorRectConfigs: WritableSignal<Array<RectConfig>> = signal([], {equal: () => false });
   public doorRectShadowConfigs: WritableSignal<Array<RectConfig>> = signal([], {equal: () => false });
+  public penCircleConfigs: WritableSignal<Array<CircleConfig>> = signal([], {equal: () => false });
+  public penCircleShadowConfig: WritableSignal<CircleConfig> = signal({} as CircleConfig, {equal: () => false });
+  public shipBackgroundPolyConfig: WritableSignal<LineConfig> = signal({} as LineConfig, {equal: () => false });
 
   public gridRectConfigs: WritableSignal<Array<RectConfig>> = signal([]);
 
@@ -131,6 +137,7 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
    * The currently selected tool.
    */
   selectedTool = input<EditorTool>(EditorTool.NONE);
+  public EditorTool = EditorTool;
 
   /**
    * The initial stage scaling (ex: 0.90)
@@ -169,6 +176,7 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   private selectedShape: Shape | undefined = undefined;
   private selectedElementStartPos: Vector2d | undefined = undefined;
   private rightClickedShipElementId: string = '';
+  private previousPenPointConfig = {} as CircleConfig;
 
   // SERVICES
   public armamentDetailsService = inject(ArmamentDetailsService);
@@ -185,6 +193,7 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
 
     // Save state to local storage to allow page reload without losing progress
     effect(() => localStorage.setItem('hullRectConfigsJson', JSON.stringify(this.hullRectConfigs())));
+    effect(() => localStorage.setItem('penCircleConfigsJson', JSON.stringify(this.penCircleConfigs())))
     effect(() => localStorage.setItem('doorRectConfigsJson', JSON.stringify(this.doorRectConfigs())));
     effect(() => localStorage.setItem('shipElementShapesJson', JSON.stringify(this.shipElementShapes())));
   }
@@ -425,6 +434,9 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     }
 
     switch (this.selectedTool()) {
+      case EditorTool.PEN:
+        this.usePenTool();
+        break;
       case EditorTool.BRUSH:
         this.useBrushTool();
         break;
@@ -511,13 +523,25 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    if (this.selectedTool() === EditorTool.DOOR) {
-      this.placeDoorShadowAtPos(this.getScaledPosition(this.stage().getStage().getPointerPosition()));
+    switch(this.selectedTool()) {
+      case EditorTool.DOOR:
+        this.placeDoorShadowAtPos(this.getScaledPosition(this.stage().getStage().getPointerPosition()));
+        break;
+      case EditorTool.PEN:
+        this.placeCircleShadowAtPos(this.getScaledPosition(this.stage().getStage().getPointerPosition()));
+        break;
     }
   }
 
   onStageHoverLeave(ngEvent: NgKonvaEventObject<MouseEvent>) {
-    this.doorRectShadowConfigs.set([]);
+    switch(this.selectedTool()) {
+      case EditorTool.DOOR:
+        this.doorRectShadowConfigs.set([]);
+        break;
+      case EditorTool.PEN:
+        this.penCircleShadowConfig.set({});
+        break;
+    }
   }
 
   /**
@@ -542,6 +566,13 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
    */
   useDoorTool() {
     this.addDoorAtShadowPos();
+  }
+
+  /**
+   * Use the pen tool to add circle points for background of ship.
+   */
+  usePenTool() {
+    this.addPenCircleAtShadowPos();
   }
 
   /**
@@ -657,7 +688,6 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
       y: gridSnappedPos.y,
       width: this.gridBlockSize(),
       height: this.gridBlockSize(),
-      fill: '#CDCDCD',
       stroke: '#fffff',
       strokeWidth: 4,
     } as RectConfig;
@@ -683,6 +713,56 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
         hullRectConfigs[gridCoords.x][gridCoords.y] = null;
         return hullRectConfigs;
       });
+    }
+  }
+
+  placeCircleShadowAtPos(pos: Vector2d | null): void {
+    if (!pos) {
+      return;
+    }
+
+    // get position snapped to grid
+    const gridSnappedPos = this.posSnappedToGrid(pos);
+    //TODO: improve this to be closest vert
+
+    this.penCircleShadowConfig.set(
+      {
+        x: gridSnappedPos.x,
+        y: gridSnappedPos.y,
+        strokeEnabled: true,
+        stroke: 'black',
+        strokeWidth: 5,
+        radius: 25
+      } as CircleConfig
+    );
+  }
+
+  addPenCircleAtShadowPos(): void {
+    this.penCircleConfigs.update((circles) => {
+      circles.push(this.penCircleShadowConfig());
+      return circles;
+    });
+
+    this.placeShipBackgroundBetweenPenPoints();
+  }
+
+  placeShipBackgroundBetweenPenPoints() {
+    if (this.penCircleConfigs().length >= 3) {
+      let backgroundVerticies: Array<number | undefined> = []
+      this.penCircleConfigs().forEach((circleConfig) => {
+        backgroundVerticies.push(circleConfig.x);
+        backgroundVerticies.push(circleConfig.y);
+      });
+
+      this.shipBackgroundPolyConfig.set(
+        {
+          points: backgroundVerticies,
+          fill: '#CDCDCD',
+          stroke: 'black',
+          strokeWidth: 5,
+          closed: true,
+        } as LineConfig
+      );
     }
   }
 
@@ -794,7 +874,6 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   }
 
   addDoorAtShadowPos(): void {
-
     const doorLeftRectConfig = {
       x: this.doorRectShadowConfigs()[0].x,
       y: this.doorRectShadowConfigs()[0].y,
@@ -820,7 +899,6 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
       doors.push(doorRightRectConfig);
       return doors;
     })
-
   }
 
   /**
@@ -881,7 +959,9 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
    * Handles the clear editor button
    */
   clearEditor(): void {
+    this.shipBackgroundPolyConfig.set({});
     this.hullRectConfigs.set([]);
+    this.penCircleConfigs.set([]);
     this.doorRectConfigs.set([]);
     this.shipElementShapes.set([]);
     (this.selector().getStage() as Transformer).nodes([]);
@@ -951,6 +1031,12 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     const hullRectConfigsJson = localStorage.getItem('hullRectConfigsJson');
     if (hullRectConfigsJson) {
       this.hullRectConfigs.set(JSON.parse(hullRectConfigsJson));
+    }
+
+    const penCircleConfigsJson = localStorage.getItem('penCircleConfigsJson');
+    if (penCircleConfigsJson) {
+      this.penCircleConfigs.set(JSON.parse(penCircleConfigsJson));
+      this.placeShipBackgroundBetweenPenPoints();
     }
 
     const doorRectConfigsJson = localStorage.getItem('doorRectConfigsJson');

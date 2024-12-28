@@ -67,6 +67,12 @@ export class EditorToolbarComponent {
     this.changeTool(EditorTool.NONE);
   }
 
+  @HostListener('document:keydown.control.o', ['$event'])
+  choosePenTool(e: KeyboardEvent) {
+    e.preventDefault();
+    this.changeTool(EditorTool.PEN);
+  }
+
   @HostListener('document:keydown.control.b', ['$event'])
   chooseBrushTool(e: KeyboardEvent) {
     e.preventDefault();

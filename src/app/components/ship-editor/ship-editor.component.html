@@ -21,6 +21,7 @@
         }
       </ko-layer>
       <ko-layer #shipHullsLayer>
+        <ko-line [config]="shipBackgroundPolyConfig()"></ko-line>
         @for (hullRow of hullRectConfigs(); track $index) {
           @for (hullRectConfig of hullRow; track $index) {
             <!-- Draw a ship element either with Konva shapes or an image -->
@@ -30,12 +31,20 @@
           }
         }
       </ko-layer>
-      <ko-layer #shipDoorsLayer>
-        @for (doorRectShadowConfig of doorRectShadowConfigs(); track $index) {
-          <ko-rect [config]="doorRectShadowConfig"></ko-rect>
+      <ko-layer #toolLayer>
+        @if (selectedTool() === EditorTool.DOOR) {
+          @for (doorRectShadowConfig of doorRectShadowConfigs(); track $index) {
+            <ko-rect [config]="doorRectShadowConfig"></ko-rect>
+          }
         }
         @for (doorRectConfig of doorRectConfigs(); track $index) {
           <ko-rect [config]="doorRectConfig"></ko-rect>
+        }
+        @if (selectedTool() === EditorTool.PEN) {
+          <ko-circle [config]="penCircleShadowConfig()"></ko-circle>
+          @for (penCircleConfig of penCircleConfigs(); track $index) {
+            <ko-circle [config]="penCircleConfig"></ko-circle>
+          }
         }
       </ko-layer>
       <ko-layer #shipElementsLayer>
@@ -48,14 +57,12 @@
       <ko-layer #armamentLayer>
         <ko-group [config]="armamentGroupConfig">
           <ko-text [config]="armamentDetailsService.shipTitleTextConfig()"></ko-text>
-
           @for (armamentRectConfig of armamentDetailsService.staticGroupRectConfigs; track $index) {
             <ko-rect [config]="armamentRectConfig"></ko-rect>
           }
           @for (armamentStaticTextConfig of armamentDetailsService.staticTextConfigs; track $index) {
             <ko-text [config]="armamentStaticTextConfig"></ko-text>
           }
-
           @for (weaponTexts of armamentDetailsService.weaponDetailsList(); track $index) {
             @for (weaponTextConfig of weaponTexts; track $index) {
               <ko-text [config]="weaponTextConfig"></ko-text>
