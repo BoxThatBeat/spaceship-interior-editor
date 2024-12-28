@@ -1,4 +1,4 @@
-import { Component, input, OnInit, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, OnInit, output, signal } from '@angular/core';
 import { ShipElement } from '../../models/ship-element';
 import { CommonModule } from '@angular/common';
 
@@ -8,6 +8,7 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule],
   templateUrl: './ship-element.component.html',
   styleUrl: './ship-element.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ShipElementComponent implements OnInit {
   shipElement = input.required<ShipElement>();

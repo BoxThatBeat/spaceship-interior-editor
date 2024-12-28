@@ -1,4 +1,4 @@
-import { Component, HostListener, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, output } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -13,6 +13,7 @@ import { NgClass } from '@angular/common';
   imports: [MatToolbarModule, MatButtonModule, MatIconModule, MatTooltipModule, MatButtonToggleModule, NgClass],
   templateUrl: './editor-toolbar.component.html',
   styleUrl: './editor-toolbar.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EditorToolbarComponent {
   EditorTool: typeof EditorTool = EditorTool;

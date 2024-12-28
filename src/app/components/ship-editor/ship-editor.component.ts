@@ -5,7 +5,6 @@ import {
   computed,
   effect,
   HostListener,
-  inject,
   input,
   OnInit,
   signal,
@@ -32,7 +31,6 @@ import { CircleConfig } from 'konva/lib/shapes/Circle';
 import { LineConfig } from 'konva/lib/shapes/Line';
 import { TextConfig } from 'konva/lib/shapes/Text';
 
-
 const textPadding: number = 15;
 const distanceBetweenWeaponText: number = 50;
 const fontFamily: string = 'Calibri';
@@ -44,7 +42,7 @@ const fontColor: string = 'black';
   imports: [StageComponent, CoreShapeComponent, ContextMenuComponent, FormsModule],
   templateUrl: './ship-editor.component.html',
   styleUrl: './ship-editor.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush, //TODO check if this is causing bugs
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ShipEditorComponent implements OnInit, AfterViewInit {
 
@@ -315,6 +313,7 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   private dragging: boolean = false;
   private middleMouseHeld: boolean = false;
   private selectedShape: Shape | undefined = undefined;
+  private selectedShipElementShape: ShipElementShape | undefined = undefined;
   private selectedElementStartPos: Vector2d | undefined = undefined;
   private rightClickedShipElementId: string = '';
 
@@ -600,6 +599,7 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
 
             this.selectedElementStartPos = { x: shape.x(), y: shape.y() } as Vector2d;
             this.selectedShape = shape;
+            this.selectedShipElementShape = this.shipElementShapes().find((shipElementShape) => shipElementShape.shipElementId === ngEvent.event.target.attrs.name);
           }
         }
         break;
@@ -643,7 +643,7 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
           this.useDoorTool();
           break;
         case EditorTool.NONE:
-          if (this.selectedShape) {
+          if (this.selectedShape && this.selectedShipElementShape) {
 
             const newX = this.selectedShape.x() + ngEvent.event.evt.movementX / stage.scaleX();
             const newY = this.selectedShape.y() + ngEvent.event.evt.movementY / stage.scaleY();
@@ -653,6 +653,9 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
                 x: newX,
                 y: newY,
               });
+
+              this.selectedShipElementShape.config.x = newX;
+              this.selectedShipElementShape.config.y = newY;
             }
           }
           break;
@@ -733,13 +736,15 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     }
 
     if (this.selectedTool() === EditorTool.NONE) {
-      if (this.selectedShape) {
+      if (this.selectedShape && this.selectedShipElementShape) {
 
-        // Validate placement of element
+        // TODO: Validate placement of element
         // check if element is placed on top of another element
         // Search for another element at the same position in the shipElementShapes array
 
         this.snapToGrid(this.selectedShape);
+        this.selectedShipElementShape.config.x = this.selectedShape.x();
+        this.selectedShipElementShape.config.y = this.selectedShape.y();
       }
 
       this.selectedShape = undefined;
@@ -1207,18 +1212,7 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
 
         // Reapply rotation since also lost
         const rotation = Math.round(shape.rotation);
-        switch (rotation) {
-          case 0:
-            shape.config = { ...shape.config, image: img, rotation: shape.rotation } as ImageConfig;
-            break;
-          case 180:
-            const adjustedConfig = { ...shape.config} as ShapeConfig
-            if (adjustedConfig.x && adjustedConfig.y) {
-              adjustedConfig.x += this.gridBlockSize();
-              adjustedConfig.y += this.gridBlockSize();
-            }
-            shape.config = { ...adjustedConfig, image: img, rotation: shape.rotation } as ImageConfig;
-        }
+        shape.config = { ...shape.config, image: img, rotation: rotation } as ImageConfig;
       });
 
       this.shipElementShapes.set(shipElementShapes);

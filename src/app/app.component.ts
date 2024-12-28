@@ -1,4 +1,4 @@
-import { Component, OnInit, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, viewChild } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { ShipEditorComponent } from './components/ship-editor/ship-editor.component';
 import { EditorToolbarComponent } from './components/editor-toolbar/editor-toolbar.component';
@@ -21,6 +21,7 @@ import shipElementsJson from '../assets/ship-elements.json';
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent {
   editorComponent = viewChild.required(ShipEditorComponent);

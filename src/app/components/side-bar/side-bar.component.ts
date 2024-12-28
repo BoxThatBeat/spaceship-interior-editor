@@ -1,4 +1,4 @@
-import { Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { ShipElement } from '../../models/ship-element';
@@ -10,6 +10,7 @@ import { ShipElementComponent } from '../ship-element/ship-element.component';
   imports: [MatTabsModule, MatExpansionModule, ShipElementComponent],
   templateUrl: './side-bar.component.html',
   styleUrl: './side-bar.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SideBarComponent {
   heldShipElement = output<ShipElement>();

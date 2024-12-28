@@ -1,5 +1,5 @@
 import { NgStyle } from '@angular/common';
-import { Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
 @Component({
   selector: 'app-context-menu',
@@ -7,6 +7,7 @@ import { Component, computed, input, output } from '@angular/core';
   imports: [NgStyle],
   templateUrl: './context-menu.component.html',
   styleUrl: './context-menu.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 /** A context menu for when the user right clicks */
 export class ContextMenuComponent {
