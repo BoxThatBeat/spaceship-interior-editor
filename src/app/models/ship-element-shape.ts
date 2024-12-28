@@ -8,6 +8,7 @@ export class ShipElementShape {
     public shipElementId: string,
     public shipElement: ShipElement,
     public gridPos: Vector2d, //TODO: probably don't need this
+    public rotation: number,
     public config: ShapeConfig
   ) {}
 }

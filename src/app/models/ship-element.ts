@@ -11,17 +11,17 @@ interface ShipElementBase {
   imageHeight: string
 }
 
-interface ShipWeapon extends ShipElementBase {
+export interface ShipWeapon extends ShipElementBase {
   damage: number;
   accuracy: number;
   range?: Range;
 }
 
-interface ShipEngine extends ShipElementBase {
+export interface ShipEngine extends ShipElementBase {
   speed: Range;
 }
 
-interface ShipShieldGenerator extends ShipElementBase {
+export interface ShipShieldGenerator extends ShipElementBase {
   capacitors: number;
 }
 

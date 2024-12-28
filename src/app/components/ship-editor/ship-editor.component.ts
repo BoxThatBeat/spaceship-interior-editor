@@ -4,6 +4,7 @@ import {
   Component,
   computed,
   effect,
+  HostListener,
   inject,
   input,
   OnInit,
@@ -16,21 +17,26 @@ import {
 import { CoreShapeComponent, NgKonvaEventObject, StageComponent } from 'ng2-konva';
 import { StageConfig } from 'konva/lib/Stage';
 import { Rect, RectConfig } from 'konva/lib/shapes/Rect';
-import { Shape } from 'konva/lib/Shape';
+import { Shape, ShapeConfig } from 'konva/lib/Shape';
 import { EditorTool } from '../../models/editor-tool.enum';
 import { Vector2d } from 'konva/lib/types';
-import { ShipElement } from '../../models/ship-element';
+import { isShipWeapon, ShipElement, ShipWeapon } from '../../models/ship-element';
 import { Image, ImageConfig } from 'konva/lib/shapes/Image';
 import { ShipElementShape } from '../../models/ship-element-shape';
 import { Transformer, TransformerConfig } from 'konva/lib/shapes/Transformer';
 import { ContextMenuComponent } from "../context-menu/context-menu.component";
 import { v4 as uuidv4 } from 'uuid';
-import ArmamentDetailsService from '../../services/armament-details.service';
 import { GroupConfig } from 'konva/lib/Group';
 import { FormsModule } from '@angular/forms';
 import { CircleConfig } from 'konva/lib/shapes/Circle';
-import { Line, LineConfig } from 'konva/lib/shapes/Line';
-import { RegularPolygonConfig } from 'konva/lib/shapes/RegularPolygon';
+import { LineConfig } from 'konva/lib/shapes/Line';
+import { TextConfig } from 'konva/lib/shapes/Text';
+
+
+const textPadding: number = 15;
+const distanceBetweenWeaponText: number = 50;
+const fontFamily: string = 'Calibri';
+const fontColor: string = 'black';
 
 @Component({
   selector: 'app-ship-editor',
@@ -41,6 +47,75 @@ import { RegularPolygonConfig } from 'konva/lib/shapes/RegularPolygon';
   changeDetection: ChangeDetectionStrategy.OnPush, //TODO check if this is causing bugs
 })
 export class ShipEditorComponent implements OnInit, AfterViewInit {
+
+  public readonly staticGroupRectConfigs: Array<RectConfig> = [
+    {
+      x: 0,
+      y: 100,
+      width: 500,
+      height: 400,
+      fill: 'white',
+      stroke: 'black',
+      strokeWidth: 2,
+    } as RectConfig,
+    {
+      x: 500,
+      y: 100,
+      width: 150,
+      height: 400,
+      fill: 'white',
+      stroke: 'black',
+      strokeWidth: 2,
+    } as RectConfig,
+    {
+      x: 650,
+      y: 100,
+      width: 150,
+      height: 400,
+      fill: 'white',
+      stroke: 'black',
+      strokeWidth: 2,
+    } as RectConfig,
+    {
+      x: 0,
+      y: 500,
+      width: 800,
+      height: 200,
+      fill: 'white',
+      stroke: 'black',
+      strokeWidth: 2,
+    } as RectConfig,
+  ]
+
+  public readonly staticTextConfigs: Array<TextConfig> = [
+    {
+      x: 0 + textPadding,
+      y: 100 + textPadding,
+      text: 'WEAPON',
+      fontSize: 50,
+      fontFamily: fontFamily,
+      fontStyle: 'bold',
+      fill: fontColor,
+    } as TextConfig,
+    {
+      x: 500 + textPadding,
+      y: 100 + textPadding,
+      text: 'DMG',
+      fontSize: 50,
+      fontFamily: fontFamily,
+      fontStyle: 'bold',
+      fill: fontColor,
+    } as TextConfig,
+    {
+      x: 650 + textPadding,
+      y: 100 + textPadding,
+      text: 'ACC',
+      fontSize: 50,
+      fontFamily: fontFamily,
+      fontStyle: 'bold',
+      fill: fontColor,
+    } as TextConfig,
+  ]
 
   // ----------------- VIEW CHILDREN -----------------
   public stage = viewChild.required(StageComponent);
@@ -79,7 +154,7 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     rotateEnabled: true,
     rotationSnaps: [0, 90, 180, 270],
     rotationSnapTolerance: 45,
-    rotateAnchorOffset: 50,
+    rotateAnchorOffset: 35,
   };
   public readonly armamentGroupConfig: GroupConfig = {
     x: 100,
@@ -170,16 +245,78 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     return total;
   });
 
+  // ----------------- ARMAMENT BOX ---------------------
+  public shipTitleTextConfig = computed(() => {
+    return {
+      x: 0,
+      y: 0,
+      text: this.shipTitle(),
+      fontSize: 100,
+      fontFamily: fontFamily,
+      fontStyle: 'bold',
+      fill: fontColor,
+    } as TextConfig
+  });
+
+  public weaponDetailsList = computed(() => {
+
+    const shipElements = this.shipElementShapes().map((elementShape) => elementShape.shipElement);
+    
+    // Get unique elements
+    let uniqueShipElementNames = new Set();
+    let uniqueShipElements: Array<ShipWeapon> = [];
+
+    shipElements.forEach((shipElement: ShipElement) => {
+      if (!uniqueShipElementNames.has(shipElement.name) && isShipWeapon(shipElement)) {
+        uniqueShipElementNames.add(shipElement.name);
+        uniqueShipElements.push(shipElement);
+      }
+    });
+
+    let weaponDetailsList: Array<Array<TextConfig>> = [];
+
+    uniqueShipElements.forEach((shipElement: ShipWeapon, index: number) => {
+      let weaponDetails: Array<TextConfig> = [];
+      
+      weaponDetails.push({
+        x: 0 + textPadding,
+        y: 175 + index * distanceBetweenWeaponText,
+        text: shipElement.name,
+        fontSize: 40,
+        fontFamily: fontFamily,
+        fill: fontColor,
+      } as TextConfig);
+
+      weaponDetails.push({
+        x: 500 + textPadding + 10,
+        y: 175 + index * distanceBetweenWeaponText,
+        text: shipElement.damage.toString(),
+        fontSize: 40,
+        fontFamily: fontFamily,
+        fill: fontColor,
+      } as TextConfig);
+
+      weaponDetails.push({
+        x: 650 + textPadding + 10,
+        y: 175 + index * distanceBetweenWeaponText,
+        text: shipElement.accuracy.toString(),
+        fontSize: 40,
+        fontFamily: fontFamily,
+        fill: fontColor,
+      } as TextConfig);
+      
+      weaponDetailsList.push(weaponDetails);
+    });
+
+    return weaponDetailsList;
+  })
+
   // ----------------- PRIVATE VARIABLES -----------------
   private dragging: boolean = false;
   private middleMouseHeld: boolean = false;
   private selectedShape: Shape | undefined = undefined;
   private selectedElementStartPos: Vector2d | undefined = undefined;
   private rightClickedShipElementId: string = '';
-  private previousPenPointConfig = {} as CircleConfig;
-
-  // SERVICES
-  public armamentDetailsService = inject(ArmamentDetailsService);
 
   // ----------------- INITIALIZERS -----------------
   constructor() {
@@ -190,12 +327,6 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
         this.gridLayer().getStage().hide();
       }
     });
-
-    // Save state to local storage to allow page reload without losing progress
-    effect(() => localStorage.setItem('hullRectConfigsJson', JSON.stringify(this.hullRectConfigs())));
-    effect(() => localStorage.setItem('penCircleConfigsJson', JSON.stringify(this.penCircleConfigs())))
-    effect(() => localStorage.setItem('doorRectConfigsJson', JSON.stringify(this.doorRectConfigs())));
-    effect(() => localStorage.setItem('shipElementShapesJson', JSON.stringify(this.shipElementShapes())));
   }
 
   ngOnInit(): void {
@@ -222,6 +353,18 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     //Apply initial zoom level
     this.stage().getStage().scale({ x: this.initialStageScale(), y: this.initialStageScale() });
     this.loadSavedState();
+
+    // Save the rotation applied to ship elements to re-apply them on load.
+    (this.selector().getStage() as Transformer).on('transformend', (event) => {
+      const rotatedShipElementShapeIndex: number = this.shipElementShapes().findIndex((element) => element.shipElementId === event.target.attrs.name);
+
+      this.shipElementShapes.update((shapes) => {
+        const shape = shapes[rotatedShipElementShapeIndex];
+        shape.rotation = event.target.attrs.rotation;
+        shapes[rotatedShipElementShapeIndex] = shape
+        return shapes;
+      });
+    });
   }
 
   /**
@@ -382,9 +525,10 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
       image: img,
       x: gridSnappedPos.x,
       y: gridSnappedPos.y,
+      rotation: elementToDuplicate.rotation
     };
 
-    this.addShipElement(shipElementId, elementCopy, image);
+    this.addShipElement(shipElementId, elementCopy, image, elementToDuplicate.rotation);
   }
 
   /**
@@ -395,8 +539,6 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     if (!shipElementToDelete) {
       return;
     }
-
-    this.armamentDetailsService.removeShipElement(shipElementToDelete);
 
     // Delete ship element with rightClickedShipElementId
     this.shipElementShapes.update((shipElementShapes) => {
@@ -614,13 +756,6 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     event.preventDefault();
   }
 
-  /**
-   * Handles when the ship title text input changes (char by char).
-   */
-  onShipTitleChanged() {
-    this.armamentDetailsService.updateShipTitle(this.shipTitle());
-  }
-
   // ----------------- KONVA CANVAS MODIFIERS -----------------
 
   /**
@@ -660,7 +795,7 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
         y: gridSnappedPos.y,
       };
 
-      this.addShipElement(shipElementId, heldShipElement, image);
+      this.addShipElement(shipElementId, heldShipElement, image, 0);
     } else {
       console.log('error: image dropped outside of grid bounds');
       //TODO: show error banner with service
@@ -900,16 +1035,14 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   /**
    * Adds a ship element with the given id and image to the editor.
    */
-  addShipElement(id: string, shipElement: ShipElement, imageConfig: ImageConfig ): void {
+  addShipElement(id: string, shipElement: ShipElement, imageConfig: ImageConfig, presetRotation: number): void {
     if (!imageConfig.x || !imageConfig.y) {
       console.log('error: imageConfig missing x or y');
       return;
     }
 
-    this.armamentDetailsService.addShipElement(shipElement);
-
     const gridCoords = this.posToGridCoords({x: imageConfig.x, y: imageConfig.y});
-    const newShipElementShape = new ShipElementShape(id, shipElement, gridCoords, imageConfig);
+    const newShipElementShape = new ShipElementShape(id, shipElement, gridCoords, presetRotation, imageConfig);
 
     this.shipElementShapes.update((shipElementShapes) => {
       shipElementShapes.push(newShipElementShape);
@@ -962,7 +1095,6 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     this.shipElementShapes.set([]);
     (this.selector().getStage() as Transformer).nodes([]);
     this.initHullRectArray();
-    this.armamentDetailsService.clearShipElements();
   }
 
   // ----------------- HELPER FUNCTIONS -----------------
@@ -1014,6 +1146,8 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     if (!pos) {
       return false;
     }
+
+    //TODO: take rotation into account!
     if (width && height) {
       return pos.x >= 0 && pos.x + width <= this.gridWidthPx() && pos.y >= 0 && pos.y + height <= this.gridHeightPx();
     }
@@ -1021,9 +1155,28 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   }
 
   /**
+   * Save state to local storage to allow page reload without losing progress
+   * @param $event 
+   */
+  @HostListener('window:beforeunload', ['$event']) 
+  saveState(): void {
+    localStorage.setItem('shipTitle', this.shipTitle());
+    localStorage.setItem('hullRectConfigsJson', JSON.stringify(this.hullRectConfigs()));
+    localStorage.setItem('shipElementShapesJson', JSON.stringify(this.shipElementShapes()));
+    localStorage.setItem('penCircleConfigsJson', JSON.stringify(this.penCircleConfigs()));
+    localStorage.setItem('doorRectConfigsJson', JSON.stringify(this.doorRectConfigs()));
+    localStorage.setItem('armamentGroupConfigJson', JSON.stringify(this.armamentGroupConfig));
+  }
+
+  /**
    * Loads the saved state from local storage. (the editor will not lose progress upon tab reload)
    */
   loadSavedState() {
+    const shipTitle = localStorage.getItem('shipTitle');
+    if (shipTitle && shipTitle != '') {
+      this.shipTitle.set(shipTitle);
+    }
+
     const hullRectConfigsJson = localStorage.getItem('hullRectConfigsJson');
     if (hullRectConfigsJson) {
       this.hullRectConfigs.set(JSON.parse(hullRectConfigsJson));
@@ -1043,7 +1196,6 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     const shipElementShapesJson = localStorage.getItem('shipElementShapesJson');
     if (shipElementShapesJson) {
       
-      //TODO: reapply rotations since they get lost since not stored in the image config. Could implement your own rotation by having 4 images per gun
       // for each shipElementShape create a new img as the serialization process removes the image property (DOM element)
       const shipElementShapes = JSON.parse(shipElementShapesJson);
       shipElementShapes.forEach((shape: ShipElementShape) => {
@@ -1052,7 +1204,21 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
         if (imageUrl) {
           img.src = imageUrl;
         }
-        shape.config = { ...shape.config, image: img } as ImageConfig;
+
+        // Reapply rotation since also lost
+        const rotation = Math.round(shape.rotation);
+        switch (rotation) {
+          case 0:
+            shape.config = { ...shape.config, image: img, rotation: shape.rotation } as ImageConfig;
+            break;
+          case 180:
+            const adjustedConfig = { ...shape.config} as ShapeConfig
+            if (adjustedConfig.x && adjustedConfig.y) {
+              adjustedConfig.x += this.gridBlockSize();
+              adjustedConfig.y += this.gridBlockSize();
+            }
+            shape.config = { ...adjustedConfig, image: img, rotation: shape.rotation } as ImageConfig;
+        }
       });
 
       this.shipElementShapes.set(shipElementShapes);

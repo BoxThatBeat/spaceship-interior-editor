@@ -1,5 +1,5 @@
 <div class="header">
-  <input type="text" [(ngModel)]="shipTitle" (keyup)="onShipTitleChanged()" maxlength="24" placeholder="Ship Title" />
+  <input type="text" [(ngModel)]="shipTitle" maxlength="24" placeholder="Ship Title" />
   <h1 class="budget-text">Budget: {{ totalCost() }} / 2000</h1>
 </div>
 <section class="editor">
@@ -56,14 +56,14 @@
       </ko-layer>
       <ko-layer #armamentLayer>
         <ko-group [config]="armamentGroupConfig">
-          <ko-text [config]="armamentDetailsService.shipTitleTextConfig()"></ko-text>
-          @for (armamentRectConfig of armamentDetailsService.staticGroupRectConfigs; track $index) {
+          <ko-text [config]="shipTitleTextConfig()"></ko-text>
+          @for (armamentRectConfig of staticGroupRectConfigs; track $index) {
             <ko-rect [config]="armamentRectConfig"></ko-rect>
           }
-          @for (armamentStaticTextConfig of armamentDetailsService.staticTextConfigs; track $index) {
+          @for (armamentStaticTextConfig of staticTextConfigs; track $index) {
             <ko-text [config]="armamentStaticTextConfig"></ko-text>
           }
-          @for (weaponTexts of armamentDetailsService.weaponDetailsList(); track $index) {
+          @for (weaponTexts of weaponDetailsList(); track $index) {
             @for (weaponTextConfig of weaponTexts; track $index) {
               <ko-text [config]="weaponTextConfig"></ko-text>
             }
