@@ -16,10 +16,10 @@ import {
 import { CoreShapeComponent, NgKonvaEventObject, StageComponent } from 'ng2-konva';
 import { StageConfig } from 'konva/lib/Stage';
 import { Rect, RectConfig } from 'konva/lib/shapes/Rect';
-import { Shape, ShapeConfig } from 'konva/lib/Shape';
+import { Shape } from 'konva/lib/Shape';
 import { EditorTool } from '../../models/editor-tool.enum';
 import { Vector2d } from 'konva/lib/types';
-import { isShipWeapon, ShipElement, ShipWeapon } from '../../models/ship-element';
+import { isShipShieldGenerator, isShipWeapon, ShipElement, ShipShieldGenerator, ShipWeapon } from '../../models/ship-element';
 import { Image, ImageConfig } from 'konva/lib/shapes/Image';
 import { ShipElementShape } from '../../models/ship-element-shape';
 import { Transformer, TransformerConfig } from 'konva/lib/shapes/Transformer';
@@ -256,58 +256,97 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     } as TextConfig
   });
 
-  public weaponDetailsList = computed(() => {
+  public shipElements = computed(() => {
+    return this.shipElementShapes().map((elementShape) => elementShape.shipElement);
+  });
 
-    const shipElements = this.shipElementShapes().map((elementShape) => elementShape.shipElement);
-    
-    // Get unique elements
+  public uniqueShipElements: Signal<Array<ShipElement>> = computed(() => {
     let uniqueShipElementNames = new Set();
-    let uniqueShipElements: Array<ShipWeapon> = [];
+    let uniqueShipElements: Array<ShipElement> = [];
 
-    shipElements.forEach((shipElement: ShipElement) => {
-      if (!uniqueShipElementNames.has(shipElement.name) && isShipWeapon(shipElement)) {
+    this.shipElements().forEach((shipElement: ShipElement) => {
+      if (!uniqueShipElementNames.has(shipElement.name)) {
         uniqueShipElementNames.add(shipElement.name);
         uniqueShipElements.push(shipElement);
       }
     });
 
+    return uniqueShipElements;
+  });
+
+  public weaponDetailsList = computed(() => {
     let weaponDetailsList: Array<Array<TextConfig>> = [];
+    this.uniqueShipElements()
+      .forEach((shipElement: ShipElement, index: number) => {
 
-    uniqueShipElements.forEach((shipElement: ShipWeapon, index: number) => {
-      let weaponDetails: Array<TextConfig> = [];
-      
-      weaponDetails.push({
-        x: 0 + textPadding,
-        y: 175 + index * distanceBetweenWeaponText,
-        text: shipElement.name,
-        fontSize: 40,
-        fontFamily: fontFamily,
-        fill: fontColor,
-      } as TextConfig);
+        if (!isShipWeapon(shipElement)) {
+          return;
+        }
 
-      weaponDetails.push({
-        x: 500 + textPadding + 10,
-        y: 175 + index * distanceBetweenWeaponText,
-        text: shipElement.damage.toString(),
-        fontSize: 40,
-        fontFamily: fontFamily,
-        fill: fontColor,
-      } as TextConfig);
+        let weaponDetails: Array<TextConfig> = [];
+        
+        weaponDetails.push({
+          x: 0 + textPadding,
+          y: 175 + index * distanceBetweenWeaponText,
+          text: shipElement.name,
+          fontSize: 40,
+          fontFamily: fontFamily,
+          fill: fontColor,
+        } as TextConfig);
 
-      weaponDetails.push({
-        x: 650 + textPadding + 10,
-        y: 175 + index * distanceBetweenWeaponText,
-        text: shipElement.accuracy.toString(),
-        fontSize: 40,
-        fontFamily: fontFamily,
-        fill: fontColor,
-      } as TextConfig);
-      
-      weaponDetailsList.push(weaponDetails);
+        weaponDetails.push({
+          x: 500 + textPadding + 10,
+          y: 175 + index * distanceBetweenWeaponText,
+          text: shipElement.damage.toString(),
+          fontSize: 40,
+          fontFamily: fontFamily,
+          fill: fontColor,
+        } as TextConfig);
+
+        weaponDetails.push({
+          x: 650 + textPadding + 10,
+          y: 175 + index * distanceBetweenWeaponText,
+          text: shipElement.accuracy.toString(),
+          fontSize: 40,
+          fontFamily: fontFamily,
+          fill: fontColor,
+        } as TextConfig);
+        
+        weaponDetailsList.push(weaponDetails);
     });
 
     return weaponDetailsList;
-  })
+  });
+  
+  public shieldCircles = computed(() => {
+    let shieldCircles: Array<CircleConfig> = [];
+  
+    let totalCapacitors = 0;
+    this.shipElements()
+      .forEach((shipElement: ShipElement, index: number) => {
+        if (!isShipShieldGenerator(shipElement)) {
+          return;
+        }
+        totalCapacitors += shipElement.capacitors;
+    });
+
+    if (totalCapacitors > 5) {
+      totalCapacitors = 5;
+    }
+
+    for(let i = 0; i < totalCapacitors; i++) {
+      shieldCircles.push({
+        x: 700 - (i * 100),
+        y: 600,
+        strokeEnabled: true,
+        stroke: 'black',
+        strokeWidth: 10,
+        radius: 40
+      } as CircleConfig);
+    }
+
+    return shieldCircles;
+  });
 
   // ----------------- PRIVATE VARIABLES -----------------
   private dragging: boolean = false;

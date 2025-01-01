@@ -133,31 +133,30 @@
     "name": "Shield Generator 5v",
     "type": "Shields",
     "notes": [],
-    "imageFileName": "/assets/ship-element-images/TempShieldGen.png",
+    "imageFileName": "/assets/ship-element-images/ShieldGenerator.png",
+    "imageWidth": "300",
+    "imageHeight": "300",
     "tacticalValue": 200,
-    "capacitors": 2
+    "capacitors": 1
   },
   {
     "name": "Shield Generator 10v",
     "type": "Shields",
     "notes": [],
+    "imageFileName": "/assets/ship-element-images/ShieldGenerator1.png",
+    "imageWidth": "300",
+    "imageHeight": "300",
     "tacticalValue": 400,
-    "capacitors": 4
+    "capacitors": 2
   },
   {
     "name": "Shield Generator 15v",
     "type": "Shields",
     "notes": [],
+    "imageFileName": "/assets/ship-element-images/ShieldGenerator2.png",
+    "imageWidth": "300",
+    "imageHeight": "300",
     "tacticalValue": 500,
-    "capacitors": 6
-  },
-  {
-    "name": "Large Shield Generator",
-    "type": "Shields",
-    "notes": [],
-    "imageFileName": "/assets/ship-element-images/ShieldGeneratorLarge.png",
-    "imageWidth": "600",
-    "imageHeight": "600",
-    "tacticalValue": 400
+    "capacitors": 3
   }
 ]
