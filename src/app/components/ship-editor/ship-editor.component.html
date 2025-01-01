@@ -1,7 +1,3 @@
-<div class="header">
-  <input type="text" [(ngModel)]="shipTitle" maxlength="24" placeholder="Ship Title" />
-  <h1 class="budget-text">Budget: {{ totalCost() }} / 2000</h1>
-</div>
 <section class="editor">
   <div #editorContainer (drop)="onImageDropped($event)" (dragover)="onContainerDragOver($event)">
     <ko-stage
@@ -73,6 +69,13 @@
     </ko-stage>
   </div>
 </section>
+<div class="footer">
+  <div>
+    <label class="ship-title-label" for="ship-title-input">Ship Title: </label>
+    <input id="ship-title-input" type="text" [(ngModel)]="shipTitle" maxlength="24" placeholder="Ship Title" />
+  </div>
+  <h1 class="budget-text">Budget: {{ totalCost() }} / 2000</h1>
+</div>
 <app-context-menu 
   [visible]="contextMenuVisible()"
   [topPosPx]="contextMenuTopPosPx()"
