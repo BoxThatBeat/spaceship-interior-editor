@@ -31,10 +31,14 @@ import { CircleConfig } from 'konva/lib/shapes/Circle';
 import { LineConfig } from 'konva/lib/shapes/Line';
 import { TextConfig } from 'konva/lib/shapes/Text';
 
-const textPadding: number = 15;
+const textPadding: number = 10;
 const distanceBetweenWeaponText: number = 50;
-const fontFamily: string = 'Calibri';
-const fontColor: string = 'black';
+const armamentSmallFontSize: number = 30;
+const armamentLargeFontSize: number = 45;
+const armamentXLargeFontSize: number = 100;
+const armamentFontFamily: string = 'Calibri';
+const armamentFontColor: string = 'black';
+const armamentFontStyle: string = 'bold';
 
 @Component({
   selector: 'app-ship-editor',
@@ -59,16 +63,34 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     {
       x: 500,
       y: 100,
-      width: 150,
+      width: 125,
       height: 400,
       fill: 'white',
       stroke: 'black',
       strokeWidth: 2,
     } as RectConfig,
     {
-      x: 650,
+      x: 625,
       y: 100,
-      width: 150,
+      width: 125,
+      height: 400,
+      fill: 'white',
+      stroke: 'black',
+      strokeWidth: 2,
+    } as RectConfig,
+    {
+      x: 750,
+      y: 100,
+      width: 125,
+      height: 400,
+      fill: 'white',
+      stroke: 'black',
+      strokeWidth: 2,
+    } as RectConfig,
+    {
+      x: 875,
+      y: 100,
+      width: 125,
       height: 400,
       fill: 'white',
       stroke: 'black',
@@ -77,8 +99,8 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     {
       x: 0,
       y: 500,
-      width: 800,
-      height: 200,
+      width: 1000,
+      height: 150,
       fill: 'white',
       stroke: 'black',
       strokeWidth: 2,
@@ -90,28 +112,37 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
       x: 0 + textPadding,
       y: 100 + textPadding,
       text: 'WEAPON',
-      fontSize: 50,
-      fontFamily: fontFamily,
-      fontStyle: 'bold',
-      fill: fontColor,
+      fontSize: armamentSmallFontSize,
+      fontFamily: armamentFontFamily,
+      fontStyle: armamentFontStyle,
+      fill: armamentFontColor,
     } as TextConfig,
     {
       x: 500 + textPadding,
       y: 100 + textPadding,
       text: 'DMG',
-      fontSize: 50,
-      fontFamily: fontFamily,
-      fontStyle: 'bold',
-      fill: fontColor,
+      fontSize: armamentSmallFontSize,
+      fontFamily: armamentFontFamily,
+      fontStyle: armamentFontStyle,
+      fill: armamentFontColor,
     } as TextConfig,
     {
-      x: 650 + textPadding,
+      x: 625 + textPadding,
       y: 100 + textPadding,
       text: 'ACC',
-      fontSize: 50,
-      fontFamily: fontFamily,
-      fontStyle: 'bold',
-      fill: fontColor,
+      fontSize: armamentSmallFontSize,
+      fontFamily: armamentFontFamily,
+      fontStyle: armamentFontStyle,
+      fill: armamentFontColor,
+    } as TextConfig,
+    {
+      x: 900 - textPadding,
+      y: 500 + textPadding,
+      text: 'SHIELDS',
+      fontSize: armamentSmallFontSize,
+      fontFamily: armamentFontFamily,
+      fontStyle: armamentFontStyle,
+      fill: armamentFontColor,
     } as TextConfig,
   ]
 
@@ -249,10 +280,10 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
       x: 0,
       y: 0,
       text: this.shipTitle(),
-      fontSize: 100,
-      fontFamily: fontFamily,
-      fontStyle: 'bold',
-      fill: fontColor,
+      fontSize: armamentXLargeFontSize,
+      fontFamily: armamentFontFamily,
+      fontStyle: armamentFontStyle,
+      fill: armamentFontColor,
     } as TextConfig
   });
 
@@ -287,29 +318,29 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
         
         weaponDetails.push({
           x: 0 + textPadding,
-          y: 175 + index * distanceBetweenWeaponText,
+          y: 150 + index * distanceBetweenWeaponText,
           text: shipElement.name,
-          fontSize: 40,
-          fontFamily: fontFamily,
-          fill: fontColor,
+          fontSize: armamentLargeFontSize,
+          fontFamily: armamentFontFamily,
+          fill: armamentFontColor,
         } as TextConfig);
 
         weaponDetails.push({
           x: 500 + textPadding + 10,
-          y: 175 + index * distanceBetweenWeaponText,
+          y: 150 + index * distanceBetweenWeaponText,
           text: shipElement.damage.toString(),
-          fontSize: 40,
-          fontFamily: fontFamily,
-          fill: fontColor,
+          fontSize: armamentLargeFontSize,
+          fontFamily: armamentFontFamily,
+          fill: armamentFontColor,
         } as TextConfig);
 
         weaponDetails.push({
-          x: 650 + textPadding + 10,
-          y: 175 + index * distanceBetweenWeaponText,
+          x: 625 + textPadding + 10,
+          y: 150 + index * distanceBetweenWeaponText,
           text: shipElement.accuracy.toString(),
-          fontSize: 40,
-          fontFamily: fontFamily,
-          fill: fontColor,
+          fontSize: armamentLargeFontSize,
+          fontFamily: armamentFontFamily,
+          fill: armamentFontColor,
         } as TextConfig);
         
         weaponDetailsList.push(weaponDetails);
@@ -336,8 +367,8 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
 
     for(let i = 0; i < totalCapacitors; i++) {
       shieldCircles.push({
-        x: 700 - (i * 100),
-        y: 600,
+        x: 950 - (i * 100) - textPadding,
+        y: 585,
         strokeEnabled: true,
         stroke: 'black',
         strokeWidth: 10,
@@ -394,6 +425,9 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
 
     // Save the rotation applied to ship elements to re-apply them on load.
     (this.selector().getStage() as Transformer).on('transformend', (event) => {
+      if (!event.target) {
+        return;
+      }
       const rotatedShipElementShapeIndex: number = this.shipElementShapes().findIndex((element) => element.shipElementId === event.target.attrs.name);
 
       this.shipElementShapes.update((shapes) => {
@@ -627,19 +661,20 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
         this.useDoorTool();
         break;
       case EditorTool.NONE:
-        if (ngEvent.event.target === this.stage().getStage()) {
-          (this.selector().getStage() as Transformer).nodes([]);
+        if (ngEvent.event.target.attrs.name === 'rotater _anchor') {
+          return; // Don't do anything if user is rotating object
+        }
+
+        const shape = ngEvent.event.target as Shape;
+        if (shape && shape instanceof Image) {
+          shape.moveToTop();
+          (this.selector().getStage() as Transformer).nodes([shape]);
+
+          this.selectedElementStartPos = { x: shape.x(), y: shape.y() } as Vector2d;
+          this.selectedShape = shape;
+          this.selectedShipElementShape = this.shipElementShapes().find((shipElementShape) => shipElementShape.shipElementId === ngEvent.event.target.attrs.name);
         } else {
-          const shape = ngEvent.event.target as Shape;
-
-          if (shape && shape instanceof Image) {
-            shape.moveToTop();
-            (this.selector().getStage() as Transformer).nodes([shape]);
-
-            this.selectedElementStartPos = { x: shape.x(), y: shape.y() } as Vector2d;
-            this.selectedShape = shape;
-            this.selectedShipElementShape = this.shipElementShapes().find((shipElementShape) => shipElementShape.shipElementId === ngEvent.event.target.attrs.name);
-          }
+          (this.selector().getStage() as Transformer).nodes([]); // Deselect image
         }
         break;
     }
