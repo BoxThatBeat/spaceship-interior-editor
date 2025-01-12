@@ -174,8 +174,17 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     } as TextConfig,
     {
       x: 0 + armamentTextPadding,
-      y: 550,
+      y: 525,
       text: 'ENGINE RANGE: ',
+      fontSize: armamentLargeFontSize,
+      fontFamily: armamentFontFamily,
+      fontStyle: armamentFontStyle,
+      fill: armamentFontColor,
+    } as TextConfig,
+    {
+      x: 0 + armamentTextPadding,
+      y: 585,
+      text: 'TACTICAL VALUE: ',
       fontSize: armamentLargeFontSize,
       fontFamily: armamentFontFamily,
       fontStyle: armamentFontStyle,
@@ -438,13 +447,13 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   public engineTextConfig = computed(() => {
     let textConfig = {
       x: 325,
-      y: 550,
+      y: 525,
       text: 'N/A',
       fontSize: armamentLargeFontSize,
       fontFamily: armamentFontFamily,
       fontStyle: armamentFontStyle,
       fill: armamentFontColor,
-    } as TextConfig
+    } as TextConfig;
 
     this.shipElements().forEach((shipElement: ShipElement) => {
       if (!isShipEngine(shipElement)) {
@@ -455,6 +464,18 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
 
     return textConfig;
   });
+
+  public tacticalValueConfig = computed(() => {
+    return {
+      x: 340,
+      y: 585,
+      text: this.totalCost().toString(),
+      fontSize: armamentLargeFontSize,
+      fontFamily: armamentFontFamily,
+      fontStyle: armamentFontStyle,
+      fill: armamentFontColor,
+    } as TextConfig;
+  })
 
   // ----------------- PRIVATE VARIABLES -----------------
   private dragging: boolean = false;
