@@ -1334,7 +1334,7 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
 
   // ----------------- STATE FUNCTIONS -----------------
 
-  private createJsonState(): any {
+  private createJsonStateFromObjects(): any {
     return {
       'shipTitle': this.shipTitle(),
       'hullRectConfigsJson': JSON.stringify(this.hullRectConfigs()),
@@ -1344,8 +1344,18 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     }
   }
 
+  private createJsonStateFromLocalStorage(): any {
+    return {
+      'shipTitle': localStorage.getItem('shipTitle'),
+      'hullRectConfigsJson': localStorage.getItem('hullRectConfigsJson'),
+      'shipElementShapesJson': localStorage.getItem('shipElementShapesJson'),
+      'penCircleConfigsJson': localStorage.getItem('penCircleConfigsJson'),
+      'doorRectConfigsJson': localStorage.getItem('doorRectConfigsJson'),
+    }
+  }
+
   private getJsonStateBlob(): Blob {
-    const jsonString = JSON.stringify(this.createJsonState());
+    const jsonString = JSON.stringify(this.createJsonStateFromObjects());
     const blob = new Blob([jsonString], { type: 'application/json' });
     return blob;
   }
@@ -1363,8 +1373,12 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     window.URL.revokeObjectURL(url);
   }
 
-  public loadDesign(): void {
-    //TODO
+  public loadDesign(jsonState: string): void {
+    if (jsonState === '') {
+      return;
+    }
+
+    this.loadStateFromJson(JSON.parse(jsonState));
   }
 
   /**
@@ -1373,7 +1387,7 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
    */
   @HostListener('window:beforeunload', ['$event']) 
   saveState(): void {
-    const state = this.createJsonState();
+    const state = this.createJsonStateFromObjects();
     localStorage.setItem('shipTitle', state.shipTitle);
     localStorage.setItem('hullRectConfigsJson', state.hullRectConfigsJson);
     localStorage.setItem('shipElementShapesJson', state.shipElementShapesJson);
@@ -1385,32 +1399,31 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
    * Loads the saved state from local storage. (the editor will not lose progress upon tab reload)
    */
   private loadSavedState() {
-    const shipTitle = localStorage.getItem('shipTitle');
-    if (shipTitle && shipTitle != '') {
-      this.shipTitle.set(shipTitle);
+    this.loadStateFromJson(this.createJsonStateFromLocalStorage())
+  }
+
+  loadStateFromJson(jsonState: any) {
+    if (jsonState.shipTitle && jsonState.shipTitle != '') {
+      this.shipTitle.set(jsonState.shipTitle);
     }
 
-    const hullRectConfigsJson = localStorage.getItem('hullRectConfigsJson');
-    if (hullRectConfigsJson) {
-      this.hullRectConfigs.set(JSON.parse(hullRectConfigsJson));
+    if (jsonState.hullRectConfigsJson) {
+      this.hullRectConfigs.set(JSON.parse(jsonState.hullRectConfigsJson));
     }
 
-    const penCircleConfigsJson = localStorage.getItem('penCircleConfigsJson');
-    if (penCircleConfigsJson) {
-      this.penCircleConfigs.set(JSON.parse(penCircleConfigsJson));
+    if (jsonState.penCircleConfigsJson) {
+      this.penCircleConfigs.set(JSON.parse(jsonState.penCircleConfigsJson));
       this.placeShipBackgroundBetweenPenPoints();
     }
 
-    const doorRectConfigsJson = localStorage.getItem('doorRectConfigsJson');
-    if (doorRectConfigsJson) {
-      this.doorRectConfigs.set(JSON.parse(doorRectConfigsJson));
+    if (jsonState.doorRectConfigsJson) {
+      this.doorRectConfigs.set(JSON.parse(jsonState.doorRectConfigsJson));
     }
 
-    const shipElementShapesJson = localStorage.getItem('shipElementShapesJson');
-    if (shipElementShapesJson) {
+    if (jsonState.shipElementShapesJson) {
       
       // for each shipElementShape create a new img as the serialization process removes the image property (DOM element)
-      const shipElementShapes = JSON.parse(shipElementShapesJson);
+      const shipElementShapes = JSON.parse(jsonState.shipElementShapesJson);
       shipElementShapes.forEach((shape: ShipElementShape) => {
         const img = document.createElement('img');
         const imageUrl = shape.shipElement.imageUrl;

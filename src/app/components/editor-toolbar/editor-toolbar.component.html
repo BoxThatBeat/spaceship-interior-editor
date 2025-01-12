@@ -44,9 +44,10 @@
     <span>Save</span>
   </button>
 
-  <button (click)="onLoadDesign()">
+  <button (click)="fileInput.click()">
+    <input hidden type="file" class="hidden" (change)="onLoadDesign($event)" #fileInput>
     <span>Load</span>
-  </button>
+  </button> 
 
   <button (click)="onExportShip()">
     <span>Export</span>

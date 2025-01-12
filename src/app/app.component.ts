@@ -57,8 +57,8 @@ export class AppComponent {
     this.editorComponent().saveDesign();
   }
 
-  public onLoadDesign(): void {
-    this.editorComponent().loadDesign()
+  public onLoadDesign(jsonState: string): void {
+    this.editorComponent().loadDesign(jsonState);
   }
 
   public onClearGrid(): void {

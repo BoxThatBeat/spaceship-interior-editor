@@ -28,7 +28,7 @@ export class EditorToolbarComponent {
   exportShip = output<void>();
   clearEditor = output<void>();
   saveDesign = output<void>();
-  loadDesign = output<void>();
+  loadDesign = output<string>();
 
   changeTool(tool: EditorTool) {
     this.currentTool = tool;
@@ -59,8 +59,17 @@ export class EditorToolbarComponent {
     this.saveDesign.emit();
   }
 
-  public onLoadDesign(): void {
-    this.loadDesign.emit();
+  public onLoadDesign(event: any): void {
+    const file: File = event.target.files[0];
+
+    let reader = new FileReader();
+
+    reader.onerror = (err) => console.log(err);
+    reader.onload = () => this.loadDesign.emit(reader.result as string)
+  
+    if (file) {
+      reader.readAsText(file);
+    }
   }
 
   public onClear(): void {
