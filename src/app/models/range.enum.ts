@@ -1,6 +1,8 @@
 
 export enum Range {
-  Shortrange,
-  Mediumrange,
-  Longrange,
+  None = 'None',
+  Short = 'Short',
+  Med = 'Med',
+  Long = 'Long',
+  Inf = 'Inf',
 }

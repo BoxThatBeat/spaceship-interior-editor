@@ -3,7 +3,9 @@
     "name": "Breach Pod Launcher",
     "type": "Weapons",
     "notes": [],
-    "tacticalValue": 100
+    "tacticalValue": 100,
+    "minRange": "None",
+    "maxRange": "Long"
   },
   {
     "name": "Gatling Gun",
@@ -14,7 +16,9 @@
     "notes": ["Penetrates shields", "Kills crew one hull deep, does not destroy hull"],
     "tacticalValue": 100,
     "damage": 0,
-    "accuracy": 4
+    "accuracy": 4,
+    "minRange": "None",
+    "maxRange": "Short"
   },
   {
     "name": "Laser Gun",
@@ -25,7 +29,9 @@
     "notes": ["1 damage to shields", "Destroys one hull deep"],
     "tacticalValue": 150,
     "damage": 1,
-    "accuracy": 2
+    "accuracy": 2,
+    "minRange": "None",
+    "maxRange": "Long"
   },
   {
     "name": "Double Laser Gun",
@@ -36,7 +42,9 @@
     "notes": ["2 damage to shields", "Each laser destroys one hull deep"],
     "tacticalValue": 250,
     "damage": 2,
-    "accuracy": 2
+    "accuracy": 2,
+    "minRange": "None",
+    "maxRange": "Long"
   },
   {
     "name": "Gauss Rifle",
@@ -47,7 +55,9 @@
     "notes": ["Penetrates shields", "Destroys two hulls deep"],
     "tacticalValue": 200,
     "damage": 0,
-    "accuracy": 1
+    "accuracy": 1,
+    "minRange": "None",
+    "maxRange": "Long"
   },
   {
     "name": "Scatter Missile Launcher",
@@ -58,7 +68,9 @@
     "notes": ["Fires 3 missiles at once", "Missiles destroy one hull each"],
     "tacticalValue": 200,
     "damage": 1,
-    "accuracy": 3
+    "accuracy": 3,
+    "minRange": "Short",
+    "maxRange": "Long"
   },
   {
     "name": "Guided Missle Launcher",
@@ -69,7 +81,9 @@
     "notes": ["Only has 2 missiles for the whole match", "Destroys all hulls surrounding impact hull (including diagonals)"],
     "tacticalValue": 300,
     "damage": 1,
-    "accuracy": 1
+    "accuracy": 1,
+    "minRange": "Long",
+    "maxRange": "Inf"
   },
   {
     "name": "Small Thruster",
@@ -100,25 +114,28 @@
     "imageWidth": "300",
     "imageHeight": "300",
     "notes": [],
-    "tacticalValue": 100
+    "tacticalValue": 100,
+    "range": "Short"
   },
   {
     "name": "Fusion Reactor v10",
     "type": "Engines",
-    "imageFileName": "/assets/ship-element-images/FusionReactorSmall.png",
+    "imageFileName": "/assets/ship-element-images/FusionReactorSmall1.png",
     "imageWidth": "300",
     "imageHeight": "300",
     "notes": [],
-    "tacticalValue": 200
+    "tacticalValue": 200,
+    "range": "Med"
   },
   {
     "name": "Fusion Reactor v15",
     "type": "Engines",
-    "imageFileName": "/assets/ship-element-images/FusionReactorSmall.png",
+    "imageFileName": "/assets/ship-element-images/FusionReactorSmall2.png",
     "imageWidth": "300",
     "imageHeight": "300",
     "notes": [],
-    "tacticalValue": 500
+    "tacticalValue": 500,
+    "range": "Long"
   },
   {
     "name": "Large Fusion Reactor",
@@ -127,7 +144,8 @@
     "imageWidth": "600",
     "imageHeight": "600",
     "notes": [],
-    "tacticalValue": 500
+    "tacticalValue": 500,
+    "range": "Short"
   },
   {
     "name": "Shield Generator 5v",

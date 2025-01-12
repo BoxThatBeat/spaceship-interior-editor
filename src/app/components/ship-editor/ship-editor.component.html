@@ -67,6 +67,7 @@
           @for (shieldCircleConfig of shieldCircles(); track $index) {
             <ko-circle [config]="shieldCircleConfig"></ko-circle>
           }
+          <ko-text [config]="engineTextConfig()"></ko-text>
         </ko-group>
       </ko-layer>
     </ko-stage>

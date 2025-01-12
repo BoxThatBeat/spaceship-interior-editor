@@ -19,7 +19,7 @@ import { Rect, RectConfig } from 'konva/lib/shapes/Rect';
 import { Shape } from 'konva/lib/Shape';
 import { EditorTool } from '../../models/editor-tool.enum';
 import { Vector2d } from 'konva/lib/types';
-import { isShipShieldGenerator, isShipWeapon, ShipElement, ShipShieldGenerator, ShipWeapon } from '../../models/ship-element';
+import { isShipEngine, isShipShieldGenerator, isShipWeapon, ShipElement } from '../../models/ship-element';
 import { Image, ImageConfig } from 'konva/lib/shapes/Image';
 import { ShipElementShape } from '../../models/ship-element-shape';
 import { Transformer, TransformerConfig } from 'konva/lib/shapes/Transformer';
@@ -31,14 +31,24 @@ import { CircleConfig } from 'konva/lib/shapes/Circle';
 import { LineConfig } from 'konva/lib/shapes/Line';
 import { TextConfig } from 'konva/lib/shapes/Text';
 
-const textPadding: number = 10;
-const distanceBetweenWeaponText: number = 50;
+// Armament Box Font Settings
+const armamentTextPadding: number = 10;
 const armamentSmallFontSize: number = 30;
 const armamentLargeFontSize: number = 45;
 const armamentXLargeFontSize: number = 100;
 const armamentFontFamily: string = 'Calibri';
 const armamentFontColor: string = 'black';
 const armamentFontStyle: string = 'bold';
+
+// Armament Box positioning
+const armamentBaseYPos: number = 100;
+const armamentColWidth: number = 125;
+const armamentColHeight: number = 400;
+const armamentCol1XPos: number = 500;
+const armamentCol2XPos: number = 625;
+const armamentCol3XPos: number = 750;
+const armamentCol4XPos: number = 875;
+const distanceBetweenWeaponText: number = 50;
 
 @Component({
   selector: 'app-ship-editor',
@@ -53,7 +63,7 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
   public readonly staticGroupRectConfigs: Array<RectConfig> = [
     {
       x: 0,
-      y: 100,
+      y: armamentBaseYPos,
       width: 500,
       height: 400,
       fill: 'white',
@@ -61,37 +71,37 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
       strokeWidth: 2,
     } as RectConfig,
     {
-      x: 500,
-      y: 100,
-      width: 125,
-      height: 400,
+      x: armamentCol1XPos,
+      y: armamentBaseYPos,
+      width: armamentColWidth,
+      height: armamentColHeight,
       fill: 'white',
       stroke: 'black',
       strokeWidth: 2,
     } as RectConfig,
     {
-      x: 625,
-      y: 100,
-      width: 125,
-      height: 400,
+      x: armamentCol2XPos,
+      y: armamentBaseYPos,
+      width: armamentColWidth,
+      height: armamentColHeight,
       fill: 'white',
       stroke: 'black',
       strokeWidth: 2,
     } as RectConfig,
     {
-      x: 750,
-      y: 100,
-      width: 125,
-      height: 400,
+      x: armamentCol3XPos,
+      y: armamentBaseYPos,
+      width: armamentColWidth,
+      height: armamentColHeight,
       fill: 'white',
       stroke: 'black',
       strokeWidth: 2,
     } as RectConfig,
     {
-      x: 875,
-      y: 100,
-      width: 125,
-      height: 400,
+      x: armamentCol4XPos,
+      y: armamentBaseYPos,
+      width: armamentColWidth,
+      height: armamentColHeight,
       fill: 'white',
       stroke: 'black',
       strokeWidth: 2,
@@ -109,8 +119,8 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
 
   public readonly staticTextConfigs: Array<TextConfig> = [
     {
-      x: 0 + textPadding,
-      y: 100 + textPadding,
+      x: 0 + armamentTextPadding,
+      y: armamentBaseYPos + armamentTextPadding,
       text: 'WEAPON',
       fontSize: armamentSmallFontSize,
       fontFamily: armamentFontFamily,
@@ -118,8 +128,8 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
       fill: armamentFontColor,
     } as TextConfig,
     {
-      x: 500 + textPadding,
-      y: 100 + textPadding,
+      x: armamentCol1XPos + armamentTextPadding,
+      y: armamentBaseYPos + armamentTextPadding,
       text: 'DMG',
       fontSize: armamentSmallFontSize,
       fontFamily: armamentFontFamily,
@@ -127,8 +137,8 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
       fill: armamentFontColor,
     } as TextConfig,
     {
-      x: 625 + textPadding,
-      y: 100 + textPadding,
+      x: armamentCol2XPos + armamentTextPadding,
+      y: armamentBaseYPos + armamentTextPadding,
       text: 'ACC',
       fontSize: armamentSmallFontSize,
       fontFamily: armamentFontFamily,
@@ -136,10 +146,37 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
       fill: armamentFontColor,
     } as TextConfig,
     {
-      x: 900 - textPadding,
-      y: 500 + textPadding,
+      x: armamentCol3XPos + armamentTextPadding,
+      y: armamentBaseYPos + armamentTextPadding,
+      text: 'MIN',
+      fontSize: armamentSmallFontSize,
+      fontFamily: armamentFontFamily,
+      fontStyle: armamentFontStyle,
+      fill: armamentFontColor,
+    } as TextConfig,
+    {
+      x: armamentCol4XPos + armamentTextPadding,
+      y: armamentBaseYPos + armamentTextPadding,
+      text: 'MAX',
+      fontSize: armamentSmallFontSize,
+      fontFamily: armamentFontFamily,
+      fontStyle: armamentFontStyle,
+      fill: armamentFontColor,
+    } as TextConfig,
+    {
+      x: 900 - armamentTextPadding,
+      y: 500 + armamentTextPadding,
       text: 'SHIELDS',
       fontSize: armamentSmallFontSize,
+      fontFamily: armamentFontFamily,
+      fontStyle: armamentFontStyle,
+      fill: armamentFontColor,
+    } as TextConfig,
+    {
+      x: 0 + armamentTextPadding,
+      y: 550,
+      text: 'ENGINE RANGE: ',
+      fontSize: armamentLargeFontSize,
       fontFamily: armamentFontFamily,
       fontStyle: armamentFontStyle,
       fill: armamentFontColor,
@@ -193,7 +230,7 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
 
   // ----------------- INPUT VARIABLES -----------------
   /**
-   * The ShipElement image currently being held by the user (with a mouse drag).
+   * The ShipElement currently being held by the user (with a mouse drag).
    */
   currentlyHeldShipElement = input<ShipElement>();
 
@@ -315,10 +352,12 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
         }
 
         let weaponDetails: Array<TextConfig> = [];
+
+        const weaponTextYPos = 150 + index * distanceBetweenWeaponText;
         
         weaponDetails.push({
-          x: 0 + textPadding,
-          y: 150 + index * distanceBetweenWeaponText,
+          x: 0 + armamentTextPadding,
+          y: weaponTextYPos,
           text: shipElement.name,
           fontSize: armamentLargeFontSize,
           fontFamily: armamentFontFamily,
@@ -326,8 +365,8 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
         } as TextConfig);
 
         weaponDetails.push({
-          x: 500 + textPadding + 10,
-          y: 150 + index * distanceBetweenWeaponText,
+          x: armamentCol1XPos + armamentTextPadding,
+          y: weaponTextYPos,
           text: shipElement.damage.toString(),
           fontSize: armamentLargeFontSize,
           fontFamily: armamentFontFamily,
@@ -335,9 +374,27 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
         } as TextConfig);
 
         weaponDetails.push({
-          x: 625 + textPadding + 10,
-          y: 150 + index * distanceBetweenWeaponText,
+          x: armamentCol2XPos + armamentTextPadding,
+          y: weaponTextYPos,
           text: shipElement.accuracy.toString(),
+          fontSize: armamentLargeFontSize,
+          fontFamily: armamentFontFamily,
+          fill: armamentFontColor,
+        } as TextConfig);
+
+        weaponDetails.push({
+          x: armamentCol3XPos + armamentTextPadding,
+          y: weaponTextYPos,
+          text: shipElement.minRange,
+          fontSize: armamentLargeFontSize,
+          fontFamily: armamentFontFamily,
+          fill: armamentFontColor,
+        } as TextConfig);
+
+        weaponDetails.push({
+          x: armamentCol4XPos + armamentTextPadding,
+          y: weaponTextYPos,
+          text: shipElement.maxRange,
           fontSize: armamentLargeFontSize,
           fontFamily: armamentFontFamily,
           fill: armamentFontColor,
@@ -353,12 +410,11 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     let shieldCircles: Array<CircleConfig> = [];
   
     let totalCapacitors = 0;
-    this.shipElements()
-      .forEach((shipElement: ShipElement, index: number) => {
-        if (!isShipShieldGenerator(shipElement)) {
-          return;
-        }
-        totalCapacitors += shipElement.capacitors;
+    this.shipElements().forEach((shipElement: ShipElement) => {
+      if (!isShipShieldGenerator(shipElement)) {
+        return;
+      }
+      totalCapacitors += shipElement.capacitors;
     });
 
     if (totalCapacitors > 5) {
@@ -367,16 +423,37 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
 
     for(let i = 0; i < totalCapacitors; i++) {
       shieldCircles.push({
-        x: 950 - (i * 100) - textPadding,
+        x: 950 - (i * 100) - armamentTextPadding,
         y: 585,
         strokeEnabled: true,
         stroke: 'black',
-        strokeWidth: 10,
-        radius: 40
+        strokeWidth: 7,
+        radius: 38
       } as CircleConfig);
     }
 
     return shieldCircles;
+  });
+
+  public engineTextConfig = computed(() => {
+    let textConfig = {
+      x: 325,
+      y: 550,
+      text: 'N/A',
+      fontSize: armamentLargeFontSize,
+      fontFamily: armamentFontFamily,
+      fontStyle: armamentFontStyle,
+      fill: armamentFontColor,
+    } as TextConfig
+
+    this.shipElements().forEach((shipElement: ShipElement) => {
+      if (!isShipEngine(shipElement)) {
+        return;
+      }
+      textConfig.text = shipElement.range;
+    });
+
+    return textConfig;
   });
 
   // ----------------- PRIVATE VARIABLES -----------------
@@ -1167,6 +1244,7 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
    * Handles the clear editor button
    */
   clearEditor(): void {
+    this.shipTitle.set('');
     this.shipBackgroundPolyConfig.set({});
     this.hullRectConfigs.set([]);
     this.penCircleConfigs.set([]);

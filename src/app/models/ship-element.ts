@@ -14,11 +14,12 @@ interface ShipElementBase {
 export interface ShipWeapon extends ShipElementBase {
   damage: number;
   accuracy: number;
-  range?: Range;
+  minRange: Range;
+  maxRange: Range;
 }
 
 export interface ShipEngine extends ShipElementBase {
-  speed: Range;
+  range: Range;
 }
 
 export interface ShipShieldGenerator extends ShipElementBase {
@@ -32,7 +33,7 @@ export function isShipWeapon(element: ShipElement): element is ShipWeapon {
 }
 
 export function isShipEngine(element: ShipElement): element is ShipEngine {
-  return (element as ShipEngine).speed !== undefined;
+  return (element as ShipEngine).range !== undefined;
 }
 
 export function isShipShieldGenerator(element: ShipElement): element is ShipShieldGenerator {
