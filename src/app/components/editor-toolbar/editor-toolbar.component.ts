@@ -27,6 +27,8 @@ export class EditorToolbarComponent {
   redoEdit = output<void>();
   exportShip = output<void>();
   clearEditor = output<void>();
+  saveDesign = output<void>();
+  loadDesign = output<void>();
 
   changeTool(tool: EditorTool) {
     this.currentTool = tool;
@@ -51,6 +53,14 @@ export class EditorToolbarComponent {
 
   public onExportShip(): void {
     this.exportShip.emit();
+  }
+
+  public onSaveDesign(): void {
+    this.saveDesign.emit();
+  }
+
+  public onLoadDesign(): void {
+    this.loadDesign.emit();
   }
 
   public onClear(): void {

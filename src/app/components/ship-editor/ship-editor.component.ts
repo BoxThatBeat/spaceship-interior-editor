@@ -1332,24 +1332,59 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
     return pos.x >= 0 && pos.x <= this.gridWidthPx() && pos.y >= 0 && pos.y <= this.gridHeightPx();
   }
 
+  // ----------------- STATE FUNCTIONS -----------------
+
+  private createJsonState(): any {
+    return {
+      'shipTitle': this.shipTitle(),
+      'hullRectConfigsJson': JSON.stringify(this.hullRectConfigs()),
+      'shipElementShapesJson': JSON.stringify(this.shipElementShapes()),
+      'penCircleConfigsJson': JSON.stringify(this.penCircleConfigs()),
+      'doorRectConfigsJson': JSON.stringify(this.doorRectConfigs()),
+    }
+  }
+
+  private getJsonStateBlob(): Blob {
+    const jsonString = JSON.stringify(this.createJsonState());
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    return blob;
+  }
+
+  public saveDesign(): void {
+    const shipTitle = this.shipTitle();
+    const filename = shipTitle === '' ? 'newDesign.json' : shipTitle + '.json';
+
+    const blob = this.getJsonStateBlob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  }
+
+  public loadDesign(): void {
+    //TODO
+  }
+
   /**
    * Save state to local storage to allow page reload without losing progress
    * @param $event 
    */
   @HostListener('window:beforeunload', ['$event']) 
   saveState(): void {
-    localStorage.setItem('shipTitle', this.shipTitle());
-    localStorage.setItem('hullRectConfigsJson', JSON.stringify(this.hullRectConfigs()));
-    localStorage.setItem('shipElementShapesJson', JSON.stringify(this.shipElementShapes()));
-    localStorage.setItem('penCircleConfigsJson', JSON.stringify(this.penCircleConfigs()));
-    localStorage.setItem('doorRectConfigsJson', JSON.stringify(this.doorRectConfigs()));
-    localStorage.setItem('armamentGroupConfigJson', JSON.stringify(this.armamentGroupConfig));
+    const state = this.createJsonState();
+    localStorage.setItem('shipTitle', state.shipTitle);
+    localStorage.setItem('hullRectConfigsJson', state.hullRectConfigsJson);
+    localStorage.setItem('shipElementShapesJson', state.shipElementShapesJson);
+    localStorage.setItem('penCircleConfigsJson', state.penCircleConfigsJson);
+    localStorage.setItem('doorRectConfigsJson', state.doorRectConfigsJson);
   }
 
   /**
    * Loads the saved state from local storage. (the editor will not lose progress upon tab reload)
    */
-  loadSavedState() {
+  private loadSavedState() {
     const shipTitle = localStorage.getItem('shipTitle');
     if (shipTitle && shipTitle != '') {
       this.shipTitle.set(shipTitle);

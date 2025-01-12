@@ -53,6 +53,14 @@ export class AppComponent {
     this.editorComponent().exportShip();
   }
 
+  public onSaveDesign(): void {
+    this.editorComponent().saveDesign();
+  }
+
+  public onLoadDesign(): void {
+    this.editorComponent().loadDesign()
+  }
+
   public onClearGrid(): void {
     this.editorComponent().clearEditor();
   }
