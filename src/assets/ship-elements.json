@@ -2,6 +2,9 @@
   {
     "name": "Breach Pod Launcher",
     "type": "Weapons",
+    "imageFileName": "/assets/ship-element-images/BreachPod.png",
+    "imageWidth": "600",
+    "imageHeight": "300",
     "notes": [],
     "tacticalValue": 100,
     "minRange": "None",
@@ -86,6 +89,15 @@
     "maxRange": "Inf"
   },
   {
+    "name": "Missile Depot",
+    "type": "Weapons",
+    "imageFileName": "/assets/ship-element-images/MissileDepot.png",
+    "imageWidth": "300",
+    "imageHeight": "300",
+    "notes": ["Required for any missile launchers"],
+    "tacticalValue": 200
+  },
+  {
     "name": "Small Thruster",
     "type": "Engines",
     "imageFileName": "/assets/ship-element-images/ThrusterSmall.png",
@@ -146,6 +158,17 @@
     "notes": [],
     "tacticalValue": 500,
     "range": "Short"
+  },
+  {
+    "name": "Small Cockpit",
+    "type": "Engines",
+    "imageFileName": "/assets/ship-element-images/FighterShipCockpit.png",
+    "imageWidth": "300",
+    "imageHeight": "300",
+    "notes": [
+      "Every ship must include at least one cockpit"
+    ],
+    "tacticalValue": 100
   },
   {
     "name": "Shield Generator 5v",
