@@ -353,8 +353,9 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
 
   public weaponDetailsList = computed(() => {
     let weaponDetailsList: Array<Array<TextConfig>> = [];
+    let weaponIndex = 0;
     this.uniqueShipElements()
-      .forEach((shipElement: ShipElement, index: number) => {
+      .forEach((shipElement: ShipElement) => {
 
         if (!isShipWeapon(shipElement)) {
           return;
@@ -362,7 +363,7 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
 
         let weaponDetails: Array<TextConfig> = [];
 
-        const weaponTextYPos = 150 + index * distanceBetweenWeaponText;
+        const weaponTextYPos = 150 + weaponIndex * distanceBetweenWeaponText;
         
         weaponDetails.push({
           x: 0 + armamentTextPadding,
@@ -410,6 +411,7 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
         } as TextConfig);
         
         weaponDetailsList.push(weaponDetails);
+        weaponIndex++;
     });
 
     return weaponDetailsList;
@@ -649,10 +651,6 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    if (event.target instanceof Rect) {
-      return;
-    }
-
     // Set the selected ship element in case an action is performed on it
     this.rightClickedShipElementId = (event.target as Shape).name();
 
@@ -720,8 +718,17 @@ export class ShipEditorComponent implements OnInit, AfterViewInit {
 
     // Deselect element
     (this.selector().getStage() as Transformer).nodes([]);
+    this.contextMenuVisible.set(false);
+  }
 
-    // Close menu
+  onContextMenuClearDoorsPressed() {
+    this.doorRectConfigs.set([]);
+    this.contextMenuVisible.set(false);
+  }
+
+  onContextMenuClearPenPressed() {
+    this.penCircleConfigs.set([]);
+    this.shipBackgroundPolyConfig.set({});
     this.contextMenuVisible.set(false);
   }
 

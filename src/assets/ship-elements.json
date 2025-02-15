@@ -76,7 +76,7 @@
     "maxRange": "Long"
   },
   {
-    "name": "Guided Missle Launcher",
+    "name": "Guided Missile Launcher",
     "type": "Weapons",
     "imageFileName": "/assets/ship-element-images/GuidedMissileLauncher.png",
     "imageWidth": "600",
@@ -171,33 +171,63 @@
     "tacticalValue": 100
   },
   {
-    "name": "Shield Generator 5v",
+    "name": "Small Shield Generator 5v",
     "type": "Shields",
     "notes": [],
-    "imageFileName": "/assets/ship-element-images/ShieldGenerator.png",
+    "imageFileName": "/assets/ship-element-images/SmallShieldGenerator.png",
     "imageWidth": "300",
     "imageHeight": "300",
     "tacticalValue": 200,
     "capacitors": 1
   },
   {
-    "name": "Shield Generator 10v",
+    "name": "Small Shield Generator 10v",
     "type": "Shields",
     "notes": [],
-    "imageFileName": "/assets/ship-element-images/ShieldGenerator1.png",
+    "imageFileName": "/assets/ship-element-images/SmallShieldGenerator1.png",
     "imageWidth": "300",
     "imageHeight": "300",
     "tacticalValue": 400,
     "capacitors": 2
   },
   {
-    "name": "Shield Generator 15v",
+    "name": "Small Shield Generator 15v",
     "type": "Shields",
     "notes": [],
-    "imageFileName": "/assets/ship-element-images/ShieldGenerator2.png",
+    "imageFileName": "/assets/ship-element-images/SmallShieldGenerator2.png",
     "imageWidth": "300",
     "imageHeight": "300",
     "tacticalValue": 500,
+    "capacitors": 3
+  },
+  {
+    "name": "Large Shield Generator 5v",
+    "type": "Shields",
+    "notes": [],
+    "imageFileName": "/assets/ship-element-images/LargeShieldGenerator.png",
+    "imageWidth": "600",
+    "imageHeight": "600",
+    "tacticalValue": 300,
+    "capacitors": 1
+  },
+  {
+    "name": "Large Shield Generator 10v",
+    "type": "Shields",
+    "notes": [],
+    "imageFileName": "/assets/ship-element-images/LargeShieldGenerator1.png",
+    "imageWidth": "600",
+    "imageHeight": "600",
+    "tacticalValue": 600,
+    "capacitors": 2
+  },
+  {
+    "name": "Large Shield Generator 15v",
+    "type": "Shields",
+    "notes": [],
+    "imageFileName": "/assets/ship-element-images/LargeShieldGenerator2.png",
+    "imageWidth": "600",
+    "imageHeight": "600",
+    "tacticalValue": 900,
     "capacitors": 3
   }
 ]

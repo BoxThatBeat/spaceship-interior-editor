@@ -82,10 +82,13 @@
   <h1 class="budget-text">Budget: {{ totalCost() }} / 2000</h1>
 </div>
 <app-context-menu 
+  [selectedTool]="selectedTool()"
   [visible]="contextMenuVisible()"
   [topPosPx]="contextMenuTopPosPx()"
   [leftPosPx]="contextMenuLeftPosPx()"
   (duplicateButtonPressed)="onContextMenuDuplicateBtnPressed()"
   (deleteButtonPressed)="onContextMenuDeleteBtnPressed()"
+  (clearDoorsButtonPressed)="onContextMenuClearDoorsPressed()"
+  (clearPenButtonPressed)="onContextMenuClearPenPressed()"
   >
 </app-context-menu>

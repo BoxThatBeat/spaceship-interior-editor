@@ -1,6 +1,16 @@
 <div class="menu" [style.top]="topPosPx() + 'px'" [style.left]="leftPosPx() + 'px'" [style.display]="visible() ? 'initial' : 'none'">
-  <div>
-    <button class="duplicate-button" (click)="onDuplicateButtonPressed()">Duplicate</button>
-    <button class="delete-button" (click)="onDeleteButtonPressed()">Delete</button>
-  </div>
+  @if (selectedTool() === EditorTool.DOOR) {
+    <div>
+      <button (click)="onClearDoorsButtonPressed()">Clear Doors</button>
+    </div>
+  } @else if (selectedTool() === EditorTool.PEN) {
+    <div>
+      <button (click)="onClearPenButtonPressed()">Clear Pen</button>
+    </div>
+  } @else {
+    <div>
+      <button (click)="onDuplicateButtonPressed()">Duplicate</button>
+      <button (click)="onDeleteButtonPressed()">Delete</button>
+    </div>
+  }
 </div>
